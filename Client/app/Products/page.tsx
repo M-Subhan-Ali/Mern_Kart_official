@@ -59,7 +59,7 @@ const Products = () => {
                   ${product.price.toFixed(2)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Seller: {product.seller.name}
+                  Seller name:{product.seller.name}
                 </p>
               </div>
             </div>
