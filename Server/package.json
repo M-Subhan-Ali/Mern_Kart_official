@@ -1,0 +1,25 @@
+{
+  "name": "mern-kart",
+  "version": "1.0.0",
+  "description": "an ecommerce basic app",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js",
+    "seed": "node seed/seedUsers.js",
+    "seed-products": "node seed/seedProducts.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.1",
+    "nodemon": "^3.1.10"
+  }
+}
