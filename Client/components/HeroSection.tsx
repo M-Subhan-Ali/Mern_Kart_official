@@ -19,7 +19,7 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-black z-10"></div>
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 animate-[fadeInDown_1s_ease-out]">
-            Welcome to mern kart
+            Welcome to Mern kart
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-2xl animate-[fadeInUp_1s_ease-out_0.3s] animate-fill-both">
             Discover the best shopping experience with our curated collection of
