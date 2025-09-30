@@ -2,36 +2,124 @@ import { Product } from "../model/Product";
 import { Cart } from "../model/Cart";
 
 export const Add_to_cart =  async (req,res) => {
-    const {productId,quantity} = req.body;
-
-    const userId = req.user.userID;
-
-    const product = await Product.findById(productId)
-
-
-    if(!product){
-        return res.status(404).json({
-            error:"no product found"
-        })
-    }
-
-    if(product.stock < quantity){
-        return res.status(400).json({
-            error:{
-                "not enough stock available!"
-            }
-        }) 
-    }
-
-    let cart = await Cart.findOne({user:UserId})
-
-    if(!cart){
-        cart=new Cart({user:userId,items:[]})
-    }
-
+   try {
+     const {productId,quantity} = req.body;
+ 
+     const userId = req.user.userID;
+ 
+     const product = await Product.findById(productId)
+ 
+ 
+     if(!product){
+         return res.status(404).json({
+             error:"no product found"
+         })
+     }
+ 
+     if(product.stock < quantity){
+         return res.status(400).json({
+             error:{
+                 "not enough stock available!"
+             }
+         }) 
+     }
+ 
+     let cart = await Cart.findOne({user:userId})
+ 
+     if(!cart){
+         cart=new Cart({user:userId,items:[]})
+     }
+ 
+ 
+     const existingProduct = cart.items.find((item)=>item.products.toString()===productId)
+ 
+     if(existingProduct){
+         cart.items[existingProduct].quantity+=quantity
+     }else{
+         cart.items.push({products:productId,quantity})
+     }
+ 
+     await cart.save()
+    res.status(200).json({ message: "Item added to cart", cart })
+ 
+   } catch (error) {
+    res.status(500).json({ error: `Internal server error: ${error.message}` });
+   }
 
 
 }
+
+
+
+
+
+// import { Product } from "../model/Product.js";
+// import { Cart } from "../model/Cart.js";
+
+// export const addToCart = async (req, res) => {
+//   try {
+//     const { productId, quantity } = req.body;
+//     const userId = req.user.userID; // from JWT middleware
+
+//     // 1. Validate input
+//     if (!productId || !quantity || quantity <= 0) {
+//       return res.status(400).json({ error: "Invalid product or quantity" });
+//     }
+
+//     // 2. Check if product exists
+//     const product = await Product.findById(productId);
+//     if (!product) {
+//       return res.status(404).json({ error: "Product not found" });
+//     }
+
+//     // 3. Check stock
+//     if (product.stock < quantity) {
+//       return res.status(400).json({ error: "Not enough stock available!" });
+//     }
+
+//     // 4. Find or create cart
+//     let cart = await Cart.findOne({ user: userId });
+//     if (!cart) {
+//       cart = new Cart({ user: userId, items: [] });
+//     }
+
+//     // 5. Find existing item in cart
+//     const existingItem = cart.items.find((item) =>
+//       item.products.equals(productId) // ✅ safer than toString()
+//     );
+
+//     if (existingItem) {
+//       // Prevent exceeding available stock
+//       if (existingItem.quantity + quantity > product.stock) {
+//         return res.status(400).json({
+//           error: "Exceeds available stock",
+//         });
+//       }
+//       existingItem.quantity += quantity;
+//     } else {
+//       cart.items.push({ products: productId, quantity });
+//     }
+
+//     // 6. Save updated cart
+//     await cart.save();
+
+//     // 7. Return updated cart with product details populated
+//     const populatedCart = await Cart.findById(cart._id).populate(
+//       "items.products",
+//       "title price images stock"
+//     );
+
+//     return res.status(200).json({
+//       message: "Item added to cart successfully",
+//       cart: populatedCart,
+//     });
+//   } catch (error) {
+//     console.error("Add to cart error:", error);
+//     return res
+//       .status(500)
+//       .json({ error: `Internal server error: ${error.message}` });
+//   }
+// };
 
 
 
