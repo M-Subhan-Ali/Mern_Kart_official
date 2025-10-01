@@ -1,57 +1,62 @@
 import { Product } from "../model/Product";
 import { Cart } from "../model/Cart";
 
-export const Add_to_cart =  async (req,res) => {
-   try {
-     const {productId,quantity} = req.body;
- 
-     const userId = req.user.userID;
- 
-     const product = await Product.findById(productId)
- 
- 
-     if(!product){
-         return res.status(404).json({
-             error:"no product found"
-         })
-     }
- 
-     if(product.stock < quantity){
-         return res.status(400).json({
-             error:{
-                 "not enough stock available!"
-             }
-         }) 
-     }
- 
-     let cart = await Cart.findOne({user:userId})
- 
-     if(!cart){
-         cart=new Cart({user:userId,items:[]})
-     }
- 
- 
-     const existingProduct = cart.items.find((item)=>item.products.toString()===productId)
- 
-     if(existingProduct){
-         cart.items[existingProduct].quantity+=quantity
-     }else{
-         cart.items.push({products:productId,quantity})
-     }
- 
-     await cart.save()
-    res.status(200).json({ message: "Item added to cart", cart })
- 
-   } catch (error) {
-    res.status(500).json({ error: `Internal server error: ${error.message}` });
-   }
+export const AddToCart = async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    const userId = req.user.UserID;
 
+    if (!productId || !quantity || quantity <= 0) {
+      return res.status(400).json({ error: "Invalid product or quantity" });
+    }
 
-}
+    const product = await Product.findById(productId);
 
+    if (!product) {
+      return res.status(404).json({ error: "product not found" });
+    }
 
+    if (product.stock < quantity) {
+      res.status(400).json({ error: "not enough stock is available!" });
+    }
 
+    const cart = await Cart.find({ user: userId });
 
+    if (!cart) {
+      cart = new Cart({ user: userId, items: [] });
+    }
+
+    const existingItems = await cart.items.find((item) =>
+      item.product.equals(productId)
+    );
+
+    if (existingItems) {
+      if (existingItems.quantity + quantity > product.stock) {
+        res.status(400).json({ error: "Exceeded available stock" });
+      }
+      existingItems.quantity += quantity;
+    } else {
+      cart.items.push({ product: productId, quantity });
+    }
+
+    await cart.save();
+
+    const populate_product = await Cart.findById(cart._id).populate(
+      "product.items",
+      "title price stock images"
+    );
+
+    return res
+      .status(200)
+      .json({
+        message: "Item added to cart successfully",
+        cart: populate_product,
+      });
+  } catch (error) {
+    console.error("Add to cart error:", error);
+    res.status(500).json({ error: `internal server error ${error}` });
+  }
+};
 
 // import { Product } from "../model/Product.js";
 // import { Cart } from "../model/Cart.js";
@@ -120,8 +125,6 @@ export const Add_to_cart =  async (req,res) => {
 //       .json({ error: `Internal server error: ${error.message}` });
 //   }
 // };
-
-
 
 // import { Cart } from "../model/Cart.js";
 // import { Product } from "../model/Product.js";
