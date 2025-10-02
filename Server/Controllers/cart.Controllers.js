@@ -17,7 +17,7 @@ export const AddToCart = async (req, res) => {
     }
 
     if (product.stock < quantity) {
-      res.status(400).json({ error: "not enough stock is available!" });
+      return res.status(400).json({ error: "not enough stock is available!" });
     }
 
     const cart = await Cart.find({ user: userId });
@@ -42,16 +42,14 @@ export const AddToCart = async (req, res) => {
     await cart.save();
 
     const populate_product = await Cart.findById(cart._id).populate(
-      "product.items",
+      "items.product",
       "title price stock images"
     );
 
-    return res
-      .status(200)
-      .json({
-        message: "Item added to cart successfully",
-        cart: populate_product,
-      });
+    return res.status(200).json({
+      message: "Item added to cart successfully",
+      cart: populate_product,
+    });
   } catch (error) {
     console.error("Add to cart error:", error);
     res.status(500).json({ error: `internal server error ${error}` });
