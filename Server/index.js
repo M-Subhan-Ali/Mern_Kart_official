@@ -6,6 +6,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { UserRouter } from "./routes/user.routes.js";
 import { ProductRoute } from "./routes/products.routes.js";
+import { CartRoute } from "./routes/cart.routes.js";
 configDotenv();
 
 const app = express();
@@ -28,6 +29,7 @@ app.get("/", (req, res) => {
 app.use("/authentication", AuthRouter);
 app.use("/user", UserRouter);
 app.use("/product", ProductRoute);
+app.use("/cart", CartRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

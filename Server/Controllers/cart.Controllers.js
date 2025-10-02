@@ -1,10 +1,10 @@
-import { Product } from "../model/Product";
-import { Cart } from "../model/Cart";
+import { Product } from "../model/Product.js";
+import { Cart } from "../model/Cart.js";
 
 export const AddToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
-    const userId = req.user.UserID;
+    const userId = req.user.userID;
 
     if (!productId || !quantity || quantity <= 0) {
       return res.status(400).json({ error: "Invalid product or quantity" });
