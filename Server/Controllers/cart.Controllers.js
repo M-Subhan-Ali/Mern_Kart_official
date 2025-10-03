@@ -20,19 +20,19 @@ export const AddToCart = async (req, res) => {
       return res.status(400).json({ error: "not enough stock is available!" });
     }
 
-    const cart = await Cart.find({ user: userId });
+    let cart = await Cart.findOne({ user: userId });
 
     if (!cart) {
       cart = new Cart({ user: userId, items: [] });
     }
 
-    const existingItems = await cart.items.find((item) =>
+    const existingItems = cart.items.find((item) =>
       item.product.equals(productId)
     );
 
     if (existingItems) {
       if (existingItems.quantity + quantity > product.stock) {
-        res.status(400).json({ error: "Exceeded available stock" });
+        return res.status(400).json({ error: "Exceeded available stock" });
       }
       existingItems.quantity += quantity;
     } else {
