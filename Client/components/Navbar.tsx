@@ -7,9 +7,9 @@ import axios from "axios";
 import { useCookies } from "react-cookie";
 
 const Navbar: React.FC = () => {
-  const [Authenticated, setAuthenticated] = useState(null);
+  const [Authenticated, setAuthenticated] = useState<boolean>(false)
   const [data, setData] = useState("");
-  const [role,setRole]=useState(null);
+  const [role,setRole]=useState("");
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false); // 👈 toggle menu
