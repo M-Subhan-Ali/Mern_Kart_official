@@ -30,7 +30,7 @@ const page = () => {
             List a new item for sale on the platform.
           </p>
           <Link
-            href="/seller/add-product"
+            href="/Products/create"
             className="inline-block px-4 py-2 bg-[#378C92] text-white rounded hover:bg-[#2c6d70]"
           >
             Add Product

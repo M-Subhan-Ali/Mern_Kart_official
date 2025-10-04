@@ -9,6 +9,7 @@ import { useCookies } from "react-cookie";
 const Navbar: React.FC = () => {
   const [Authenticated, setAuthenticated] = useState(null);
   const [data, setData] = useState("");
+  const [role,setRole]=useState(null);
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false); // 👈 toggle menu
@@ -28,6 +29,7 @@ const Navbar: React.FC = () => {
         const data = await response.data;
         if (response) {
           setUser(data.user.name);
+          setRole(data.user.role)
         } else {
           console.error("Failed to fetch user", data.error);
         }
@@ -88,6 +90,13 @@ const Navbar: React.FC = () => {
     router.push("/Cart");
   };
 
+  const handleDashboard = (role : String )=>{
+    const formatString = role.charAt(0).toUpperCase() + role.slice(1);
+    router.push(`/${formatString}`)
+  }
+
+  console.log(role)
+
   return (
     <div className="bg-gray-100">
       <nav className="bg-gradient-to-r from-gray-900 to-gray-800 text-white fixed w-full z-50">
@@ -109,9 +118,12 @@ const Navbar: React.FC = () => {
           <div className="hidden sm:flex items-center space-x-4">
             {Authenticated ? (
               <>
-                <h1 className="font-bold text-base sm:text-lg md:text-xl truncate max-w-[140px] sm:max-w-none">
+                <button onClick={()=>handleDashboard(role)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 text-sm sm:text-base"
+
+                 >
                   Welcome {user}!
-                </h1>
+                </button>
                 <button
                   onClick={handleCart}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 text-sm sm:text-base"
