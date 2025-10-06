@@ -56,6 +56,81 @@ export const AddToCart = async (req, res) => {
   }
 };
 
+export const Getcart = async (req, res) => {
+  try {
+    const userId = req.user.userID;
+    const cart = await Cart.findOne({ user: userId }).populate(
+      "items.product",
+      "title price images stock"
+    );
+
+    if (!cart || cart.items.length == 0) {
+      return res
+        .status(200)
+        .json({ message: "Cart is empty", cart: { items: [] } });
+    }
+
+    return res.status(200).json({ message: "Cart fetched Successfully", cart });
+  } catch (error) {
+    console.error("GetCart error:", error);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${error.message}` });
+  }
+};
+
+export const UpdateCart = async (req, res) => {
+  try {
+    const userId = req.user.userID;
+    const { productId } = req.params;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity >= 0) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    if (product.stock < quantity) {
+      return res.status(400).json({ error: "not enough stock available" });
+    }
+
+    const cart = await Cart.findOne({ user: userId });
+
+    if (!cart) {
+      return res.status(404).json({ error: "Cart not found!" });
+    }
+
+    const item = await cart.items.find((i) => i.product.equals(product._id));
+
+    if (!item) {
+      return res.status(404).json({ error: "product not found" });
+    }
+
+    item.quantity = quantity;
+
+    await cart.save();
+
+    const updatedCart = await Cart.findById(cart._id).populate(
+      "items.product",
+      "title stock images price"
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Cart Successfully updated!", cart: updatedCart });
+  } catch (error) {
+    console.error("UpdateCartItem error:", error);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${error.message}` });
+  }
+};
+
 // import { Product } from "../model/Product.js";
 // import { Cart } from "../model/Cart.js";
 
