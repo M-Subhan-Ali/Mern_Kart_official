@@ -85,7 +85,7 @@ export const UpdateCart = async (req, res) => {
     const { productId } = req.params;
     const { quantity } = req.body;
 
-    if (!quantity || quantity >= 0) {
+    if (!quantity || quantity <= 0) {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
@@ -125,6 +125,66 @@ export const UpdateCart = async (req, res) => {
       .json({ message: "Cart Successfully updated!", cart: updatedCart });
   } catch (error) {
     console.error("UpdateCartItem error:", error);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${error.message}` });
+  }
+};
+
+export const RemoveFromCart = async (req, res) => {
+  try {
+    const userid = req.user.userID;
+    const { productId } = req.params;
+
+    const cart = await Cart.findOne({ user: userid });
+
+    if (!cart) {
+      return res.status(404).json({ error: "Cart not found" });
+    }
+
+    const new_Filtered_Items = cart.items.filter(
+      (i) => !i.product.equals(productId)
+    );
+
+    if (new_Filtered_Items.length === cart.items.length) {
+      return res.status(404).json({ error: "Product not found in the cart" });
+    }
+
+    cart.items = new_Filtered_Items;
+
+    await cart.save();
+
+    const Updated_cart = await Cart.findById(cart._id).populate(
+      "items.product",
+      "title price stock images"
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Item removed Successfully", cart: Updated_cart });
+  } catch (error) {
+    console.error("RemoveFromCart error:", error);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${error.message}` });
+  }
+};
+
+export const Clear_Cart = async (req, res) => {
+  try {
+    const userid = req.user.userID;
+    const cart = await Cart.findOne({ user: userid });
+    if (!cart) {
+      return res.status(404).json({ error: "Cart not found" });
+    }
+
+    cart.items = [];
+
+    await cart.save();
+
+    return res.status(200).json({ message: "Cart cleared successfully", cart });
+  } catch (error) {
+    console.error("ClearCart error:", error);
     return res
       .status(500)
       .json({ error: `Internal server error: ${error.message}` });
