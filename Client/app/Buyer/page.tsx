@@ -24,6 +24,19 @@ const page = () => {
           </Link>
         </div>
 
+         <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all">
+          <h2 className="text-xl font-semibold mb-2">Browse Products</h2>
+          <p className="text-gray-600 mb-4">
+            Explore products listed by sellers and make purchases.
+          </p>
+          <Link
+            href="/Products"
+            className="inline-block px-4 py-2 bg-[#378C92] text-white rounded hover:bg-[#2c6d70]"
+          >
+            View Cart
+          </Link>
+        </div>
+
         {/* View Orders */}
         <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all">
           <h2 className="text-xl font-semibold mb-2">Your Orders</h2>

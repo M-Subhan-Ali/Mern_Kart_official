@@ -110,8 +110,8 @@ const Products = () => {
                     >
                       Seller name: {product.seller.name}
                     </p>
-                    <Link
-                      href={`/Products/${product._id}`}
+                    <div
+                      
                       className="inline-block mt-2 px-4 sm:px-5 py-2 
                        bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
                        text-white font-semibold rounded-lg shadow-md 
@@ -120,7 +120,7 @@ const Products = () => {
                        transition duration-300 ease-in-out text-center w-full sm:w-auto"
                     >
                       View Product
-                    </Link>
+                    </div>
                   </div>
                 </div>
               </Link>

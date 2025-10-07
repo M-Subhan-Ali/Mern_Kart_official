@@ -14,10 +14,20 @@ router.get("/", getAllProducts); //public routes bro
 
 router.get("/:id", fetch_ProductBy_ID);
 
-router.post("/create-product", privateRoute,requireRole("seller"), createProduct);
+router.post(
+  "/create-product",
+  privateRoute,
+  requireRole("seller"),
+  createProduct
+);
 
-router.post("/update-product/:id", privateRoute,requireRole("seller"), Update_product);
+router.post(
+  "/update-product/:id",
+  privateRoute,
+  requireRole("seller"),
+  Update_product
+);
 
-router.post("/delete/:id", privateRoute,requireRole("seller"), DeleteProduct);
+router.post("/delete/:id", privateRoute, requireRole("seller"), DeleteProduct);
 
 export { router as ProductRoute };

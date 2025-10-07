@@ -3,40 +3,70 @@ import Link from "next/link";
 import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("buyer"); // default
-  const [data, setData] = useState(null);
-  const [errorMessage, setErrormessage] = useState("");
-
-  const route = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState("buyer");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const loginData = { email, password, role };
-    // console.log('Login attempt with:', loginData)
+
+    // ✅ SAFEST: get values from form elements (mobile-autofill safe)
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const email = (formData.get("email") as string)?.trim();
+    const password = (formData.get("password") as string)?.trim();
+
+    if (!email || !password) {
+      toast.warning("Please enter both email and password.", {
+        position: "top-center",
+        autoClose: 2500,
+      });
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BASE_ROUTE}/authentication/Login`,
-        loginData,
-        {
-          withCredentials: true,
-        }
+        { email, password, role },
+        { withCredentials: true }
       );
-      if (response.data.user.role === "seller") {
-        route.push("/Seller");
-      } else if (response.data.user.role === "buyer") {
-        route.push("/Buyer");
+
+      if (response.data?.user) {
+        const userRole = response.data.user.role;
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("loginSuccess", "true");
+        }
+
+        toast.success("Login successful! Redirecting...", {
+          position: "top-center",
+          autoClose: 1800,
+        });
+
+        setTimeout(() => {
+          router.push(userRole === "seller" ? "/Seller" : "/Buyer");
+        }, 1500);
+      } else {
+        toast.error("Unexpected response. Please try again later.", {
+          position: "top-center",
+        });
       }
-      setData(response.data);
-    } catch (error) {
-      setErrormessage(error?.response?.data?.error || "something went wrong ");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.error ||
+          "Invalid email or password. Please try again.",
+        { position: "top-center", autoClose: 3000 }
+      );
+    } finally {
+      setLoading(false);
     }
   };
-
-  console.log(data);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-600 to-gray-300 flex items-center justify-center pt-[70px] px-4 sm:px-6 lg:px-8">
@@ -49,7 +79,13 @@ const LoginPage: React.FC = () => {
             Sign in to access your personalized shopping experience
           </p>
         </div>
-        <form className="space-y-6" onSubmit={handleSubmit}>
+
+        <form
+          className="space-y-6"
+          onSubmit={handleSubmit}
+          autoComplete="on" // ✅ ensures mobile autofill works properly
+        >
+          {/* Email */}
           <div>
             <label
               htmlFor="email"
@@ -63,13 +99,12 @@ const LoginPage: React.FC = () => {
               type="email"
               autoComplete="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-600 shadow-sm transition duration-300 text-gray-900 placeholder-gray-400"
+              className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-600 shadow-sm text-gray-900 placeholder-gray-400"
               placeholder="Email"
             />
           </div>
 
+          {/* Password */}
           <div>
             <label
               htmlFor="password"
@@ -83,13 +118,12 @@ const LoginPage: React.FC = () => {
               type="password"
               autoComplete="current-password"
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-600 shadow-sm focus:ring-gray-600 focus:border-gray-800 transition duration-300 text-gray-900 placeholder-gray-400"
+              className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-600 shadow-sm text-gray-900 placeholder-gray-400"
               placeholder="••••••••"
             />
           </div>
 
+          {/* Role */}
           <div>
             <label
               htmlFor="role"
@@ -109,6 +143,7 @@ const LoginPage: React.FC = () => {
             </select>
           </div>
 
+          {/* Remember + Forgot */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -134,13 +169,20 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white font-semibold rounded-lg shadow-md hover:from-gray-500 hover:to-gray-600 transition-all duration-300 transform hover:scale-105 focus:outline-none"
+            disabled={loading}
+            className={`w-full py-3 px-4 font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none ${
+              loading
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : "bg-gradient-to-r from-gray-400 to-gray-500 text-white hover:from-gray-500 hover:to-gray-600"
+            }`}
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
+
         <p className="text-center text-sm text-gray-600">
           Don’t have an account?{" "}
           <Link
