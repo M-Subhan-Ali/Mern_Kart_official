@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
+import { fetchUserInfo } from "@/redux/features/userSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 const Navbar: React.FC = () => {
   const [Authenticated, setAuthenticated] = useState(false);
@@ -14,6 +16,8 @@ const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
   const [cookies, , removeCookie] = useCookies(["token"]);
+  const {user, role , loading} = useAppSelector((state)=>state.user);
+  const dispatch = useAppDispatch();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -65,25 +69,29 @@ const Navbar: React.FC = () => {
   }, [pathname]);
 
   // === Fetch user info ===
-  useEffect(() => {
-    const getUserInfo = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_ROUTE}/user/getUserInfo`,
-          { withCredentials: true }
-        );
-        const data = res.data;
-        if (data?.user) {
-          setUser(data.user.name);
-          setRole(data.user.role);
-          setAuthenticated(true);
-        } else setAuthenticated(false);
-      } catch {
-        setAuthenticated(false);
-      }
-    };
-    getUserInfo();
-  }, [pathname]);
+  // useEffect(() => {
+  //   const getUserInfo = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         `${process.env.NEXT_PUBLIC_BASE_ROUTE}/user/getUserInfo`,
+  //         { withCredentials: true }
+  //       );
+  //       const data = res.data;
+  //       if (data?.user) {
+  //         setUser(data.user.name);
+  //         setRole(data.user.role);
+  //         setAuthenticated(true);
+  //       } else setAuthenticated(false);
+  //     } catch {
+  //       setAuthenticated(false);
+  //     }
+  //   };
+  //   getUserInfo();
+  // }, [pathname]);
+
+  useEffect(()=>{
+    dispatch(fetchUserInfo())
+  },[dispatch])
 
   // === Logout ===
   const handleLogout = async () => {
