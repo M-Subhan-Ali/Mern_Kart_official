@@ -16,7 +16,7 @@ const page = () => {
             View, edit, or delete the products you listed.
           </p>
           <Link
-            href="/seller/products"
+            href="/Products"
             className="inline-block px-4 py-2 bg-[#378C92] text-white rounded hover:bg-[#2c6d70]"
           >
             Manage Products
