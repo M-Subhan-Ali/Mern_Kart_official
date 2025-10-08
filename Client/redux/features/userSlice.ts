@@ -71,6 +71,7 @@ const initialState = {
   role: null,
   loading: false,
   error: null as string | null,
+  isAuthenticated: false,
 };
 
 // === Slice ===
@@ -92,12 +93,14 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.role = action.payload?.role || null;
+        state.isAuthenticated = true;
       })
       .addCase(fetchUserInfo.rejected, (state, action) => {
         state.loading = false;
         state.user = null;
         state.role = null;
         state.error = action.payload as string;
+        state.isAuthenticated = false;
       });
 
     // === Login User ===
@@ -110,6 +113,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.role = action.payload?.role || null;
+        state.isAuthenticated = true ;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -125,6 +129,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = null;
         state.role = null;
+        state.isAuthenticated = false ;
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;

@@ -1,27 +1,27 @@
 "use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import axios from "axios";
-import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
-import { fetchUserInfo } from "@/redux/features/userSlice";
+import { fetchUserInfo, logoutUser } from "@/redux/features/userSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 const Navbar: React.FC = () => {
-  const [Authenticated, setAuthenticated] = useState(false);
-  const [role, setRole] = useState("");
-  const [user, setUser] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hasLoggedOut, setHasLoggedOut] = useState(false);
-  const [cookies, , removeCookie] = useCookies(["token"]);
-  const {user, role , loading} = useAppSelector((state)=>state.user);
+  const { user, role, isAuthenticated, loading } = useAppSelector(
+    (state) => state.user
+  );
   const dispatch = useAppDispatch();
-
   const router = useRouter();
   const pathname = usePathname();
-  const menuRef = useRef<HTMLDivElement | null>(null); // 👈 ref for outside click
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ Fetch user info when Navbar mounts
+  useEffect(() => {
+    dispatch(fetchUserInfo());
+  }, [dispatch]);
 
   // ✅ Close menu when clicking outside
   useEffect(() => {
@@ -32,11 +32,10 @@ const Navbar: React.FC = () => {
     };
     if (menuOpen) document.addEventListener("mousedown", handleOutsideClick);
     else document.removeEventListener("mousedown", handleOutsideClick);
-
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [menuOpen]);
 
-  // ✅ Trigger logout success toast AFTER redirect
+  // ✅ Show logout toast after redirect
   useEffect(() => {
     if (typeof window !== "undefined") {
       const logoutFlag = localStorage.getItem("logoutSuccess");
@@ -68,49 +67,11 @@ const Navbar: React.FC = () => {
     }
   }, [pathname]);
 
-  // === Fetch user info ===
-  // useEffect(() => {
-  //   const getUserInfo = async () => {
-  //     try {
-  //       const res = await axios.get(
-  //         `${process.env.NEXT_PUBLIC_BASE_ROUTE}/user/getUserInfo`,
-  //         { withCredentials: true }
-  //       );
-  //       const data = res.data;
-  //       if (data?.user) {
-  //         setUser(data.user.name);
-  //         setRole(data.user.role);
-  //         setAuthenticated(true);
-  //       } else setAuthenticated(false);
-  //     } catch {
-  //       setAuthenticated(false);
-  //     }
-  //   };
-  //   getUserInfo();
-  // }, [pathname]);
-
-  useEffect(()=>{
-    dispatch(fetchUserInfo())
-  },[dispatch])
-
-  // === Logout ===
+  // ✅ Logout with Redux thunk
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_ROUTE}/authentication/logout`,
-        {},
-        { withCredentials: true }
-      );
-
-      removeCookie("token");
-      setAuthenticated(false);
-      setUser(null);
-      setHasLoggedOut(true);
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("logoutSuccess", "true");
-      }
-
+      await dispatch(logoutUser()).unwrap();
+      localStorage.setItem("logoutSuccess", "true");
       router.push("/");
     } catch {
       toast.error("Something went wrong while logging out.", {
@@ -119,6 +80,7 @@ const Navbar: React.FC = () => {
     }
   };
 
+  // ✅ Navigation Handlers
   const handleLogin = () => {
     toast.info("Redirecting to Login page...", { position: "bottom-center" });
     router.push("/Login");
@@ -152,7 +114,7 @@ const Navbar: React.FC = () => {
     <div className="bg-gray-100">
       <nav className="bg-gradient-to-r from-gray-900 to-gray-800 text-white fixed w-full z-50">
         <div className="container h-[70px] mx-auto px-4 py-4 flex justify-between items-center">
-          {/* Logo */}
+          {/* === Logo === */}
           <div className="flex-shrink-0">
             <Link href="/">
               <Image
@@ -165,15 +127,17 @@ const Navbar: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Buttons */}
+          {/* === Desktop Menu === */}
           <div className="hidden sm:flex items-center space-x-4">
-            {Authenticated ? (
+            {loading ? (
+              <p className="text-gray-400 animate-pulse">Loading...</p>
+            ) : isAuthenticated ? (
               <>
                 <button
                   onClick={() => handleDashboard(role)}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
-                  Welcome {user}!
+                  Welcome {user?.name || "User"}!
                 </button>
                 <button
                   onClick={handleCart}
@@ -212,7 +176,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger */}
+          {/* === Mobile Hamburger === */}
           <div className="sm:hidden">
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -223,7 +187,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Mobile Slide-Out Menu */}
+        {/* === Mobile Slide-Out Menu === */}
         {menuOpen && (
           <div
             ref={menuRef}
@@ -236,9 +200,9 @@ const Navbar: React.FC = () => {
               ✖
             </button>
 
-            {Authenticated ? (
+            {isAuthenticated ? (
               <>
-                <p className="font-bold text-white">Hi {user}</p>
+                <p className="font-bold text-white">Hi {user?.name || "User"}</p>
                 <button
                   onClick={handleCart}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
