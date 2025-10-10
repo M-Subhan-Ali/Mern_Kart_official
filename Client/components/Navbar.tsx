@@ -3,16 +3,13 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import axios from "axios";
 import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchCart } from "@/redux/features/cartSlice";
+import { fetchUserInfo, logoutUser } from "@/redux/features/userSlice";
 
 const Navbar: React.FC = () => {
-  const [Authenticated, setAuthenticated] = useState(false);
-  const [role, setRole] = useState("");
-  const [user, setUser] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cookies, , removeCookie] = useCookies(["token"]);
 
@@ -20,39 +17,26 @@ const Navbar: React.FC = () => {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Redux hooks for Cart
+  // ✅ Redux hooks
   const dispatch = useAppDispatch();
-  const { cart, loading } = useAppSelector((state) => state.cart);
+  const { user, role, isAuthenticated, loading: userLoading } = useAppSelector(
+    (state) => state.user
+  );
+  const { cart } = useAppSelector((state) => state.cart);
 
-  // ✅ Fetch user info
+  // ✅ Fetch user info from Redux
   useEffect(() => {
-    const getUserInfo = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_ROUTE}/user/getUserInfo`,
-          { withCredentials: true }
-        );
-        const data = res.data;
-        if (data?.user) {
-          setUser(data.user.name);
-          setRole(data.user.role);
-          setAuthenticated(true);
-        } else setAuthenticated(false);
-      } catch {
-        setAuthenticated(false);
-      }
-    };
-    getUserInfo();
-  }, [pathname]);
+    dispatch(fetchUserInfo());
+  }, [dispatch]);
 
   // ✅ Fetch cart when authenticated
   useEffect(() => {
-    if (Authenticated) {
+    if (isAuthenticated) {
       dispatch(fetchCart());
     }
-  }, [Authenticated, dispatch]);
+  }, [isAuthenticated, dispatch]);
 
-  // ✅ Close mobile menu on outside click
+  // ✅ Close mobile menu when clicking outside
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -64,55 +48,15 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [menuOpen]);
 
-  // ✅ Show logout success toast after redirect
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const logoutFlag = localStorage.getItem("logoutSuccess");
-      if (logoutFlag === "true") {
-        setTimeout(() => {
-          toast.success("You’ve been logged out successfully!", {
-            position: "top-center",
-            autoClose: 2500,
-          });
-          localStorage.removeItem("logoutSuccess");
-        }, 400);
-      }
-    }
-  }, [pathname]);
-
-  // ✅ Show login success toast
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const loginFlag = localStorage.getItem("loginSuccess");
-      if (loginFlag === "true") {
-        setTimeout(() => {
-          toast.success("Login successful! Welcome back 🎉", {
-            position: "top-center",
-            autoClose: 2500,
-          });
-          localStorage.removeItem("loginSuccess");
-        }, 400);
-      }
-    }
-  }, [pathname]);
-
-  // ✅ Logout
+  // ✅ Logout (Redux)
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_ROUTE}/authentication/logout`,
-        {},
-        { withCredentials: true }
-      );
-
+      await dispatch(logoutUser()).unwrap();
       removeCookie("token");
-      setAuthenticated(false);
-      setUser(null);
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("logoutSuccess", "true");
-      }
-
+      toast.success("You’ve been logged out successfully!", {
+        position: "top-center",
+        autoClose: 2500,
+      });
       router.push("/");
     } catch {
       toast.error("Something went wrong while logging out.", {
@@ -137,7 +81,7 @@ const Navbar: React.FC = () => {
     router.push("/Cart");
   };
 
-  const handleDashboard = (role: string) => {
+  const handleDashboard = () => {
     if (!role) {
       toast.warning("User role not found. Please re-login.", {
         position: "bottom-center",
@@ -170,13 +114,15 @@ const Navbar: React.FC = () => {
 
           {/* === Desktop Menu === */}
           <div className="hidden sm:flex items-center space-x-4">
-            {Authenticated ? (
+            {userLoading ? (
+              <p className="text-gray-400 animate-pulse">Loading...</p>
+            ) : isAuthenticated ? (
               <>
                 <button
-                  onClick={() => handleDashboard(role)}
+                  onClick={handleDashboard}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
-                  Welcome {user}!
+                  Welcome {user?.name || "User"}!
                 </button>
 
                 {/* 🛒 Cart with count */}
@@ -185,7 +131,7 @@ const Navbar: React.FC = () => {
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
                   🛒 Cart
-                  {cart?.items?.length > 0 && (
+                  {cart?.items && cart.items.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                       {cart.items.length}
                     </span>
@@ -207,7 +153,7 @@ const Navbar: React.FC = () => {
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
                   🛒 Cart
-                  {cart?.items?.length > 0 && (
+                  {cart?.items && cart.items.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                       {cart.items.length}
                     </span>
@@ -254,15 +200,17 @@ const Navbar: React.FC = () => {
               ✖
             </button>
 
-            {Authenticated ? (
+            {isAuthenticated ? (
               <>
-                <p className="font-bold text-white">Hi {user}</p>
+                <p className="font-bold text-white">
+                  Hi {user?.name || "User"}
+                </p>
                 <button
                   onClick={handleCart}
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                 >
                   🛒 Cart
-                  {cart?.items?.length > 0 && (
+                  {cart?.items && cart.items.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                       {cart.items.length}
                     </span>
@@ -282,7 +230,7 @@ const Navbar: React.FC = () => {
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                 >
                   🛒 Cart
-                  {cart?.items?.length > 0 && (
+                  {cart?.items && cart.items.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                       {cart.items.length}
                     </span>

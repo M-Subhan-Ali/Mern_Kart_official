@@ -1,6 +1,7 @@
 "use client";
 
 import ParticlesBackground from "@/components/ParticleBackground";
+import { addToCart } from "@/redux/features/cartSlice";
 import { fetchUserInfo } from "@/redux/features/userSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -12,6 +13,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -52,7 +54,10 @@ const Products = () => {
 
   
   const handleAddToCart = (productId: string) => {
+    dispatch(addToCart({productId,quantity:1})).unwrap()
+    
     toast.success("Added to cart!", { position: "bottom-center" });
+
   };
 
   const handleBuyNow = (productId: string) => {

@@ -1,22 +1,22 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAppDispatch } from "@/redux/hooks";
+import { loginUser } from "@/redux/features/userSlice";
 
 const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState("buyer");
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // ✅ SAFEST: get values from form elements (mobile-autofill safe)
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+    const formData = new FormData(e.currentTarget);
     const email = (formData.get("email") as string)?.trim();
     const password = (formData.get("password") as string)?.trim();
 
@@ -31,38 +31,28 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_ROUTE}/authentication/Login`,
-        { email, password, role },
-        { withCredentials: true }
-      );
+      // ✅ Use Redux thunk instead of direct axios call
+      const user = await dispatch(loginUser({ email, password, role })).unwrap();
 
-      if (response.data?.user) {
-        const userRole = response.data.user.role;
+      toast.success("Login successful! Redirecting...", {
+        position: "top-center",
+        autoClose: 1800,
+      });
 
-        if (typeof window !== "undefined") {
-          localStorage.setItem("loginSuccess", "true");
-        }
-
-        toast.success("Login successful! Redirecting...", {
-          position: "top-center",
-          autoClose: 1800,
-        });
-
-        setTimeout(() => {
-          router.push(userRole === "seller" ? "/Seller" : "/Buyer");
-        }, 1500);
-      } else {
-        toast.error("Unexpected response. Please try again later.", {
-          position: "top-center",
-        });
+      // Save success flag (optional for toast in Navbar)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("loginSuccess", "true");
       }
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.error ||
-          "Invalid email or password. Please try again.",
-        { position: "top-center", autoClose: 3000 }
-      );
+
+      // Redirect based on user role
+      setTimeout(() => {
+        router.push(user.role === "seller" ? "/Seller" : "/Buyer");
+      }, 1500);
+    } catch (err: any) {
+      toast.error(err || "Invalid email or password.", {
+        position: "top-center",
+        autoClose: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -83,21 +73,17 @@ const LoginPage: React.FC = () => {
         <form
           className="space-y-6"
           onSubmit={handleSubmit}
-          autoComplete="on" // ✅ ensures mobile autofill works properly
+          autoComplete="on"
         >
           {/* Email */}
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address
             </label>
             <input
               id="email"
               name="email"
               type="email"
-              autoComplete="email"
               required
               className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-600 shadow-sm text-gray-900 placeholder-gray-400"
               placeholder="Email"
@@ -106,17 +92,13 @@ const LoginPage: React.FC = () => {
 
           {/* Password */}
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
               id="password"
               name="password"
               type="password"
-              autoComplete="current-password"
               required
               className="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-600 shadow-sm text-gray-900 placeholder-gray-400"
               placeholder="••••••••"
@@ -125,10 +107,7 @@ const LoginPage: React.FC = () => {
 
           {/* Role */}
           <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">
               Select Role
             </label>
             <select
@@ -141,32 +120,6 @@ const LoginPage: React.FC = () => {
               <option value="buyer">Buyer</option>
               <option value="seller">Seller</option>
             </select>
-          </div>
-
-          {/* Remember + Forgot */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-gray-400 focus:ring-gray-400 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-600"
-              >
-                Remember me
-              </label>
-            </div>
-            <div>
-              <a
-                href="#forgot-password"
-                className="text-sm underline text-gray-500 hover:text-gray-600 transition duration-300"
-              >
-                Forgot your password?
-              </a>
-            </div>
           </div>
 
           {/* Submit */}
@@ -185,10 +138,7 @@ const LoginPage: React.FC = () => {
 
         <p className="text-center text-sm text-gray-600">
           Don’t have an account?{" "}
-          <Link
-            href="/SignUp"
-            className="text-black font-medium transition duration-300"
-          >
+          <Link href="/SignUp" className="text-black font-medium transition duration-300">
             Sign up now
           </Link>
         </p>
