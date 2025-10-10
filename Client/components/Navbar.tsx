@@ -6,65 +6,25 @@ import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchCart } from "@/redux/features/cartSlice";
 
 const Navbar: React.FC = () => {
   const [Authenticated, setAuthenticated] = useState(false);
   const [role, setRole] = useState("");
   const [user, setUser] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hasLoggedOut, setHasLoggedOut] = useState(false);
   const [cookies, , removeCookie] = useCookies(["token"]);
 
   const router = useRouter();
   const pathname = usePathname();
-  const menuRef = useRef<HTMLDivElement | null>(null); // 👈 ref for outside click
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Close menu when clicking outside
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    if (menuOpen) document.addEventListener("mousedown", handleOutsideClick);
-    else document.removeEventListener("mousedown", handleOutsideClick);
+  // ✅ Redux hooks for Cart
+  const dispatch = useAppDispatch();
+  const { cart, loading } = useAppSelector((state) => state.cart);
 
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [menuOpen]);
-
-  // ✅ Trigger logout success toast AFTER redirect
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const logoutFlag = localStorage.getItem("logoutSuccess");
-      if (logoutFlag === "true") {
-        setTimeout(() => {
-          toast.success("You’ve been logged out successfully!", {
-            position: "top-center",
-            autoClose: 2500,
-          });
-          localStorage.removeItem("logoutSuccess");
-        }, 400);
-      }
-    }
-  }, [pathname]);
-
-  // ✅ Show login success once
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const loginFlag = localStorage.getItem("loginSuccess");
-      if (loginFlag === "true") {
-        setTimeout(() => {
-          toast.success("Login successful! Welcome back 🎉", {
-            position: "top-center",
-            autoClose: 2500,
-          });
-          localStorage.removeItem("loginSuccess");
-        }, 400);
-      }
-    }
-  }, [pathname]);
-
-  // === Fetch user info ===
+  // ✅ Fetch user info
   useEffect(() => {
     const getUserInfo = async () => {
       try {
@@ -85,7 +45,58 @@ const Navbar: React.FC = () => {
     getUserInfo();
   }, [pathname]);
 
-  // === Logout ===
+  // ✅ Fetch cart when authenticated
+  useEffect(() => {
+    if (Authenticated) {
+      dispatch(fetchCart());
+    }
+  }, [Authenticated, dispatch]);
+
+  // ✅ Close mobile menu on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleOutsideClick);
+    else document.removeEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [menuOpen]);
+
+  // ✅ Show logout success toast after redirect
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const logoutFlag = localStorage.getItem("logoutSuccess");
+      if (logoutFlag === "true") {
+        setTimeout(() => {
+          toast.success("You’ve been logged out successfully!", {
+            position: "top-center",
+            autoClose: 2500,
+          });
+          localStorage.removeItem("logoutSuccess");
+        }, 400);
+      }
+    }
+  }, [pathname]);
+
+  // ✅ Show login success toast
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loginFlag = localStorage.getItem("loginSuccess");
+      if (loginFlag === "true") {
+        setTimeout(() => {
+          toast.success("Login successful! Welcome back 🎉", {
+            position: "top-center",
+            autoClose: 2500,
+          });
+          localStorage.removeItem("loginSuccess");
+        }, 400);
+      }
+    }
+  }, [pathname]);
+
+  // ✅ Logout
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -97,7 +108,6 @@ const Navbar: React.FC = () => {
       removeCookie("token");
       setAuthenticated(false);
       setUser(null);
-      setHasLoggedOut(true);
 
       if (typeof window !== "undefined") {
         localStorage.setItem("logoutSuccess", "true");
@@ -111,6 +121,7 @@ const Navbar: React.FC = () => {
     }
   };
 
+  // ✅ Navigation handlers
   const handleLogin = () => {
     toast.info("Redirecting to Login page...", { position: "bottom-center" });
     router.push("/Login");
@@ -144,7 +155,7 @@ const Navbar: React.FC = () => {
     <div className="bg-gray-100">
       <nav className="bg-gradient-to-r from-gray-900 to-gray-800 text-white fixed w-full z-50">
         <div className="container h-[70px] mx-auto px-4 py-4 flex justify-between items-center">
-          {/* Logo */}
+          {/* === Logo === */}
           <div className="flex-shrink-0">
             <Link href="/">
               <Image
@@ -157,7 +168,7 @@ const Navbar: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Buttons */}
+          {/* === Desktop Menu === */}
           <div className="hidden sm:flex items-center space-x-4">
             {Authenticated ? (
               <>
@@ -167,12 +178,20 @@ const Navbar: React.FC = () => {
                 >
                   Welcome {user}!
                 </button>
+
+                {/* 🛒 Cart with count */}
                 <button
                   onClick={handleCart}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
+                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
                   🛒 Cart
+                  {cart?.items?.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cart.items.length}
+                    </span>
+                  )}
                 </button>
+
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 bg-white text-black hover:bg-amber-200 rounded-lg transition duration-300 text-sm sm:text-base"
@@ -182,12 +201,19 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <>
+                {/* 🛒 Cart without login */}
                 <button
                   onClick={handleCart}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
+                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
                   🛒 Cart
+                  {cart?.items?.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cart.items.length}
+                    </span>
+                  )}
                 </button>
+
                 <button
                   onClick={handleLogin}
                   className="px-4 py-2 bg-white text-black hover:bg-amber-200 rounded-lg transition duration-300 text-sm sm:text-base"
@@ -204,7 +230,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger */}
+          {/* === Mobile Hamburger === */}
           <div className="sm:hidden">
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -215,7 +241,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Mobile Slide-Out Menu */}
+        {/* === Mobile Slide-Out Menu === */}
         {menuOpen && (
           <div
             ref={menuRef}
@@ -233,9 +259,14 @@ const Navbar: React.FC = () => {
                 <p className="font-bold text-white">Hi {user}</p>
                 <button
                   onClick={handleCart}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                 >
                   🛒 Cart
+                  {cart?.items?.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cart.items.length}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={handleLogout}
@@ -248,9 +279,14 @@ const Navbar: React.FC = () => {
               <>
                 <button
                   onClick={handleCart}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                 >
                   🛒 Cart
+                  {cart?.items?.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cart.items.length}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={handleLogin}
