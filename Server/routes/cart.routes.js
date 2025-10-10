@@ -15,9 +15,9 @@ route.post("/add_to_cart", privateRoute, requireRole("buyer"), AddToCart);
 
 route.get("/fetch_cart_items", privateRoute, requireRole("buyer"), Getcart);
 
-route.post("/update_item", privateRoute, requireRole("buyer"), UpdateCart);
+route.post("/update_item/:productId", privateRoute, requireRole("buyer"), UpdateCart);
 
-route.post("/remove_item", privateRoute, requireRole("buyer"), RemoveFromCart);
+route.post("/remove_item/:productId", privateRoute, requireRole("buyer"), RemoveFromCart);
 
 route.post("/clear_cart", privateRoute, requireRole("buyer"), Clear_Cart);
 
