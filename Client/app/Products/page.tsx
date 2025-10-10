@@ -1,7 +1,7 @@
 "use client";
 
 import ParticlesBackground from "@/components/ParticleBackground";
-import { addToCart } from "@/redux/features/cartSlice";
+import { addToCart, fetchCart } from "@/redux/features/cartSlice";
 import { fetchUserInfo } from "@/redux/features/userSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -19,6 +19,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [backendDown, setBackendDown] = useState(true);
   const {role , user , loading } = useAppSelector((state)=>state.user);
+  const {cart}=useAppSelector((state)=>state.cart)
   const dispatch = useAppDispatch()
   const theme = useTheme();
 
@@ -47,16 +48,38 @@ const Products = () => {
     fetchProducts();
   }, []);
 
+  useEffect(()=>{
+    dispatch(fetchCart()).unwrap()
+  },[])
+
   // fetch user role 
   useEffect(() => {
     dispatch(fetchUserInfo())
   }, [dispatch]);
 
-  
-  const handleAddToCart = (productId: string) => {
-    dispatch(addToCart({productId,quantity:1})).unwrap()
+  // console.log(cart,"carttt")
+  const handleAddToCart = async (productId: string) => {
+    const already_in_cart = cart?.items?.some((value)=>value.product._id === productId)
     
-    toast.success("Added to cart!", { position: "bottom-center" });
+    if(already_in_cart){
+      toast.info("🛒 This item is already in your cart!",{
+        position: "bottom-center",
+        autoClose: 2000,
+      })
+      return
+    }
+
+    try {
+      await dispatch(addToCart({ productId, quantity: 1 })).unwrap();
+      toast.success("✅ Added to cart!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    } catch (error) {
+      toast.error("Failed to add to cart!", {
+        position: "bottom-center",
+      });
+    }
 
   };
 
