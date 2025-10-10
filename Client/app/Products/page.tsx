@@ -168,20 +168,20 @@ const Products = () => {
                     <div className="flex flex-col sm:flex-row gap-2 mt-3">
                       <button
                         onClick={() => handleEdit(product._id)}
-                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300"
+                        className="flex-1 px-4 py-2 bg-gray-700 hover:bg-blue-700 text-white text-xs rounded-lg transition duration-300"
                       >
                         ✏️ Edit Product
                       </button>
                       <button
                         onClick={() => handleDelete(product._id)}
-                        className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300"
+                        className="flex-1 px-4 py-2 bg-red-900 hover:bg-red-700 text-xs text-white rounded-lg transition duration-300"
                       >
                         🗑️ Delete
                       </button>
                     </div>
                   )}
 
-                  {!role && (
+                  {role !== "seller" && role !== "buyer" && (
                     <div className="mt-3 text-center">
                       <p className="text-gray-400 text-sm italic">
                         Please log in to view purchase options.

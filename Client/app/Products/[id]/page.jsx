@@ -12,8 +12,8 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState("");
   const params = useParams();
   const router = useRouter();
-  const {role}= useAppSelector((state)=>state.user)
- console.log(role,"roleeeeeeeeeeee")
+  const { role } = useAppSelector((state) => state.user)
+  console.log(role, "roleeeeeeeeeeee")
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -94,45 +94,57 @@ const ProductDetail = () => {
           </p>
           <p className="text-sm text-gray-500">Seller: {product.seller?.name}</p>
 
-         {role === "buyer" && <div className="grid">
-          <button
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+          {role === "buyer" && <div className="grid">
+            <button
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
             text-white font-semibold rounded-lg shadow-md 
             hover:from-[#41cd2bff] hover:to-[#414449ff] 
             focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
             transition duration-300 ease-in-out 
             w-full sm:w-auto"
             >
-            Buy Now
-          </button>
-          <button
-            className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
+              Buy Now
+            </button>
+            <button
+              className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
             hover:bg-orange-500 transition cursor-pointer 
             w-full sm:w-auto"
             >
-            Add to Cart
-          </button>
-            </div> }
-          
+              Add to Cart
+            </button>
+          </div>}
+
           {role === "seller" && <div className="grid">
-          <button
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+            <button
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
             text-white font-semibold rounded-lg shadow-md 
             hover:from-[#41cd2bff] hover:to-[#414449ff] 
             focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
             transition duration-300 ease-in-out 
             w-full sm:w-auto"
             >
-            Edit
-          </button>
-          <button
-            className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
+              Edit
+            </button>
+            <button
+              className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
             hover:bg-orange-500 transition cursor-pointer 
             w-full sm:w-auto"
             >
-            Delete
-          </button>
-            </div> }
+              Delete
+            </button>
+          </div>}
+
+          {role !== "seller" && role !== "buyer" && <div className="grid">
+            <button
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+            text-white font-semibold rounded-lg shadow-md 
+            hover:from-[#41cd2bff] hover:to-[#414449ff] 
+            focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
+            transition duration-300 ease-in-out 
+            w-full sm:w-auto"
+            >
+              Login for buying or manage products
+            </button></div>}
 
         </div>
       </div>
