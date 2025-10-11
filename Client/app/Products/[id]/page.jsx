@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ParticlesBackground from "@/components/ParticleBackground";
 import { useAppSelector } from "@/redux/hooks";
+import Link from "next/link";
 
 const ProductDetail = () => {
   const [product, setProduct] = useState(null);
@@ -135,16 +136,15 @@ const ProductDetail = () => {
           </div>}
 
           {role !== "seller" && role !== "buyer" && <div className="grid">
-            <button
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
-            text-white font-semibold rounded-lg shadow-md 
-            hover:from-[#41cd2bff] hover:to-[#414449ff] 
+            <Link href={"/Login"}  className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+              text-white font-semibold rounded-lg shadow-md 
+              hover:from-[#41cd2bff] hover:to-[#414449ff] 
             focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
             transition duration-300 ease-in-out 
-            w-full sm:w-auto"
-            >
+            w-full sm:w-auto text-center">
               Login for buying or manage products
-            </button></div>}
+            </Link>
+            </div>}
 
         </div>
       </div>
