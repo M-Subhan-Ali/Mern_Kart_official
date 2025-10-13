@@ -65,10 +65,23 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+
+export const userCheckLogin = createAsyncThunk("user/verify",async (_,{rejectWithValue})=>{
+ try {
+  const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_ROUTE}/user/userInfo`,
+     { withCredentials : true}
+   );
+   return res.data.user
+ } catch (error : any) {
+   return rejectWithValue("Logout failed");
+ }
+})
+
 // === Initial State ===
 const initialState = {
   user: null,
   role: null,
+  login:false,
   loading: false,
   error: null as string | null,
   isAuthenticated: false,
@@ -111,12 +124,14 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
+        state.login=true;
         state.user = action.payload;
         state.role = action.payload?.role || null;
         state.isAuthenticated = true ;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
+        state.login=false;
         state.error = action.payload as string;
       });
 
@@ -127,12 +142,35 @@ const userSlice = createSlice({
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.loading = false;
+         state.login=false;
         state.user = null;
         state.role = null;
         state.isAuthenticated = false ;
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
+         state.login=true;
+        state.error = action.payload as string;
+      });
+     
+      //check login
+      builder
+      .addCase(userCheckLogin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(userCheckLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.login = true;
+        state.user = action.payload;
+        state.role = action.payload?.role || null;
+        state.isAuthenticated = true;
+      })
+      .addCase(userCheckLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.login = false;
+        state.user = null;
+        state.role = null;
+        state.isAuthenticated = false;
         state.error = action.payload as string;
       });
   },

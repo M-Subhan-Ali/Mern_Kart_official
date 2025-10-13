@@ -14,7 +14,6 @@ const ProductDetail = () => {
   const params = useParams();
   const router = useRouter();
   const { role } = useAppSelector((state) => state.user)
-  console.log(role, "roleeeeeeeeeeee")
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -32,6 +31,7 @@ const ProductDetail = () => {
   }, [params]);
 
   if (!product) return <div className="p-6">Loading...</div>;
+
 
   return (
     <div className="pt-[70px] px-4 sm:px-6 md:px-10 lg:px-32 w-full mx-auto ">
@@ -91,8 +91,9 @@ const ProductDetail = () => {
           </h1>
           <p className="text-base sm:text-lg text-gray-600">{product.description}</p>
           <p className="text-xl sm:text-2xl text-[#378C92] font-semibold">
-            ${product.price.toFixed(2)}
+           Price :  ${product.price.toFixed(2)}
           </p>
+          <p className="text-md text-white bg-black w-25 border rounded-md text-center">Stock: {product.stock}</p>
           <p className="text-sm text-gray-500">Seller: {product.seller?.name}</p>
 
           {role === "buyer" && <div className="grid">

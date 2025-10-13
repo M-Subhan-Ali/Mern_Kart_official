@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -14,29 +14,27 @@ const Navbar: React.FC = () => {
   const [cookies, , removeCookie] = useCookies(["token"]);
 
   const router = useRouter();
-  const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Redux hooks
   const dispatch = useAppDispatch();
   const { user, role, isAuthenticated, loading: userLoading } = useAppSelector(
     (state) => state.user
   );
   const { cart } = useAppSelector((state) => state.cart);
 
-  // ✅ Fetch user info from Redux
+  //  Fetch user info from Redux
   useEffect(() => {
     dispatch(fetchUserInfo());
   }, [dispatch]);
 
-  // ✅ Fetch cart when authenticated
+  //  Fetch cart when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchCart());
     }
   }, [isAuthenticated, dispatch]);
 
-  // ✅ Close mobile menu when clicking outside
+  //  Close mobile menu when clicking outside
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -48,7 +46,7 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [menuOpen]);
 
-  // ✅ Logout (Redux)
+  //  Logout (Redux)
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
@@ -65,7 +63,7 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // ✅ Navigation handlers
+  //  Navigation handlers
   const handleLogin = () => {
     toast.info("Redirecting to Login page...", { position: "bottom-center" });
     router.push("/Login");
@@ -126,7 +124,7 @@ const Navbar: React.FC = () => {
                 </button>
 
                 {/* 🛒 Cart with count */}
-                <button
+               {role !== "seller" && <button
                   onClick={handleCart}
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
@@ -136,7 +134,7 @@ const Navbar: React.FC = () => {
                       {cart.items.length}
                     </span>
                   )}
-                </button>
+                </button>}
 
                 <button
                   onClick={handleLogout}
@@ -148,7 +146,7 @@ const Navbar: React.FC = () => {
             ) : (
               <>
                 {/* 🛒 Cart without login */}
-                <button
+               {role !== "seller" && <button
                   onClick={handleCart}
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
                 >
@@ -158,7 +156,7 @@ const Navbar: React.FC = () => {
                       {cart.items.length}
                     </span>
                   )}
-                </button>
+                </button>}
 
                 <button
                   onClick={handleLogin}
@@ -205,7 +203,7 @@ const Navbar: React.FC = () => {
                 <p className="font-bold text-white">
                   Hi {user?.name || "User"}
                 </p>
-                <button
+               {role !== "seller" && <button
                   onClick={handleCart}
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                 >
@@ -215,7 +213,7 @@ const Navbar: React.FC = () => {
                       {cart.items.length}
                     </span>
                   )}
-                </button>
+                </button>}
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 bg-white text-black hover:bg-amber-200 rounded-lg transition"
@@ -225,7 +223,7 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <>
-                <button
+               {role !== "seller" && <button
                   onClick={handleCart}
                   className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                 >
@@ -235,7 +233,7 @@ const Navbar: React.FC = () => {
                       {cart.items.length}
                     </span>
                   )}
-                </button>
+                </button>}
                 <button
                   onClick={handleLogin}
                   className="px-4 py-2 bg-white text-black hover:bg-amber-200 rounded-lg transition"

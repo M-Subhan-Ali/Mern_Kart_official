@@ -111,6 +111,9 @@ const cartSlice = createSlice({
     resetCartError: (state) => {
       state.error = null;
     },
+    clearCartLocal:(state)=>{
+      state.cart = {items:[]}
+    }
   },
   extraReducers: (builder) => {
     // Generic handlers for all thunks
@@ -146,5 +149,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { resetCartError } = cartSlice.actions;
+export const { resetCartError,clearCartLocal } = cartSlice.actions;
 export default cartSlice.reducer;

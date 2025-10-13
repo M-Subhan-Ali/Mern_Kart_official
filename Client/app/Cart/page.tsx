@@ -3,16 +3,43 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchCart, removeCartItem, updateCartItem } from "@/redux/features/cartSlice";
+import {
+  clearCartLocal,
+  fetchCart,
+  removeCartItem,
+  updateCartItem,
+} from "@/redux/features/cartSlice";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 const CartPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter(); 
   const { cart, loading } = useAppSelector((state) => state.cart);
+  const { isAuthenticated, loading: userLoading, user } = useAppSelector(
+    (state) => state.user
+  ); 
+
+  const isLoggedIn = isAuthenticated;
 
   useEffect(() => {
-    dispatch(fetchCart());
-  }, [dispatch]);
+    if (isLoggedIn) {
+      dispatch(fetchCart());
+    } else {
+      dispatch(clearCartLocal());
+    }
+  }, [dispatch, isLoggedIn]);
+
+  // handle seller role
+  useEffect(() => {
+    if (user?.role === "seller") {
+      // redirect seller automatically
+      router.push("/Seller");
+
+      //  message for debugging
+      console.log("Seller logged in showing message instead of cart");
+    }
+  }, [user]);
 
   const handleRemove = async (id: string) => {
     try {
@@ -33,10 +60,55 @@ const CartPage: React.FC = () => {
   };
 
   const total =
-    cart?.items?.reduce(
-      (sum, i) => sum + i.product.price * i.quantity,
-      0
-    ) || 0;
+    cart?.items?.reduce((sum, i) => sum + i.product.price * i.quantity, 0) || 0;
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600 animate-pulse text-lg font-medium">
+          Checking authentication...
+        </p>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center bg-gray-50">
+        <Image src="/logo.png" alt="Login" width={250} height={250} />
+        <h2 className="text-2xl font-semibold text-gray-800 mt-6">
+          Please login to view your cart 🛒
+        </h2>
+        <Link
+          href="/Login"
+          className="mt-6 px-6 py-3 rounded-xl bg-gradient-to-r from-gray-500 to-gray-700 text-white font-medium hover:from-gray-600 hover:to-gray-800 transition-all duration-300 shadow-md"
+        >
+          Login Now
+        </Link>
+      </div>
+    );
+  }
+
+  // ✅ NEW: Seller-specific message (if not redirected)
+  if (user?.role === "seller") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center bg-gray-50">
+        <Image src="/logo.png" alt="Seller" width={200} height={200} />
+        <h2 className="text-2xl font-semibold text-gray-800 mt-6">
+          Hello Seller 👋
+        </h2>
+        <p className="text-gray-500 mt-2 max-w-sm">
+          You don’t have a cart because sellers manage products, not purchases.
+        </p>
+        <Link
+          href="/Seller/Dashboard"
+          className="mt-6 px-6 py-3 rounded-xl bg-gradient-to-r from-gray-500 to-gray-700 text-white font-medium hover:from-gray-600 hover:to-gray-800 transition-all duration-300 shadow-md"
+        >
+          Go to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   if (loading)
     return (
@@ -51,7 +123,7 @@ const CartPage: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center bg-gradient-to-b from-gray-50 to-gray-200 px-4">
         <Image
-          src="/empty-cart.png"
+          src="/logo.png"
           alt="Empty cart"
           width={260}
           height={260}
@@ -61,10 +133,11 @@ const CartPage: React.FC = () => {
           Your cart is feeling empty 🛒
         </h2>
         <p className="text-gray-500 mt-2 max-w-sm">
-          Looks like you haven’t added anything yet. Explore our collection and find something you’ll love!
+          Looks like you haven't added anything yet. Explore our collection and
+          find something you'll love!
         </p>
         <Link
-          href="/Buyer"
+          href="/Products"
           className="mt-6 px-6 py-3 rounded-xl bg-gradient-to-r from-gray-500 to-gray-700 text-white font-medium hover:from-gray-600 hover:to-gray-800 transition-all duration-300 shadow-md"
         >
           Continue Shopping
@@ -72,9 +145,15 @@ const CartPage: React.FC = () => {
 
         <style jsx>{`
           @keyframes float {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-            100% { transform: translateY(0); }
+            0% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-6px);
+            }
+            100% {
+              transform: translateY(0);
+            }
           }
           .animate-float {
             animation: float 3s ease-in-out infinite;
@@ -120,7 +199,10 @@ const CartPage: React.FC = () => {
                   <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                     <button
                       onClick={() =>
-                        handleQuantityChange(item.product._id, item.quantity - 1)
+                        handleQuantityChange(
+                          item.product._id,
+                          item.quantity - 1
+                        )
                       }
                       className="px-3 py-1 hover:bg-gray-100 text-lg"
                     >
@@ -131,7 +213,10 @@ const CartPage: React.FC = () => {
                     </span>
                     <button
                       onClick={() =>
-                        handleQuantityChange(item.product._id, item.quantity + 1)
+                        handleQuantityChange(
+                          item.product._id,
+                          item.quantity + 1
+                        )
                       }
                       className="px-3 py-1 hover:bg-gray-100 text-lg"
                     >
