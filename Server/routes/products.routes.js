@@ -8,6 +8,7 @@ import {
 } from "../Controllers/products.Controllers.js";
 import { privateRoute } from "../middlewares/authmiddleware.js";
 import { requireRole } from "../middlewares/rolemiddleware.js";
+import { upload } from "../middlewares/upload.js";
 const router = Router();
 
 router.get("/", getAllProducts); //public routes bro
@@ -18,6 +19,7 @@ router.post(
   "/create-product",
   privateRoute,
   requireRole("seller"),
+  upload.array("images",5),
   createProduct
 );
 

@@ -1,4 +1,5 @@
 import { Product } from "../model/Product.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 
 export const getAllProducts = async (req, res) => {
   try {
@@ -36,11 +37,23 @@ export const createProduct = async (req, res) => {
         .json({ error: "Only seller can create products!" });
     }
 
+
+    if(!req.files || req.files.lengtth === 0){
+      return res.status(400).json({ error: "Please upload at least one image!" });
+    }
+
+    const uploadedImages = [];
+
+    for (const file of req.files) {
+      const image = await uploadToCloudinary(file.buffer, "products");
+      uploadedImages.push(image.secure_url); // get the Cloudinary URL
+    }
+
     const product = new Product({
       title,
       description,
       price,
-      images,
+      images : uploadedImages,
       stock,
       category,
       seller: req.user.userID,
