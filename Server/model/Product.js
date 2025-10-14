@@ -35,6 +35,7 @@ const product_Schema = new mongoose.Schema(
         "jewelery",
         "furniture",
         "fragrances",
+        "watch",
       ],
       required: [true, "Categopry is Required"],
       trim: true,

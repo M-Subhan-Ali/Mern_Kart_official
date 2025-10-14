@@ -19,7 +19,7 @@ router.post(
   "/create-product",
   privateRoute,
   requireRole("seller"),
-  upload.array("images",5),
+  upload.array("images", 5),
   createProduct
 );
 

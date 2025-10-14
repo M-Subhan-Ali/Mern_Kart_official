@@ -37,23 +37,24 @@ export const createProduct = async (req, res) => {
         .json({ error: "Only seller can create products!" });
     }
 
-
-    if(!req.files || req.files.lengtth === 0){
-      return res.status(400).json({ error: "Please upload at least one image!" });
+    if (!req.files || req.files.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Please upload at least one image!" });
     }
 
     const uploadedImages = [];
 
     for (const file of req.files) {
       const image = await uploadToCloudinary(file.buffer, "products");
-      uploadedImages.push(image.secure_url); // get the Cloudinary URL
+      uploadedImages.push(image); // get the Cloudinary URL
     }
 
     const product = new Product({
       title,
       description,
       price,
-      images : uploadedImages,
+      images: uploadedImages,
       stock,
       category,
       seller: req.user.userID,
