@@ -43,11 +43,9 @@ const Create_Products = () => {
         }
       );
 
-      if (!res.ok) throw new Error("Failed to create product");
-
-      const result = await res.json();
+      // Axios automatically parses JSON response, no need for res.json()
       alert("✅ Product created successfully!");
-      console.log(result);
+      console.log(res.data);
 
       // Reset
       setFormData({
