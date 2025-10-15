@@ -38,14 +38,16 @@ const ProductDetail = () => {
       <ParticlesBackground />
 
       {/* Back Button */}
+      <div className="pt-10">
       <button
-        onClick={() => router.push("/Products")}
+        onClick={() => router.back()}
         className="relative z-10 mb-5 mt-2 px-4 py-2 bg-gray-100 border border-gray-300 
-                   text-[#1F2540] rounded hover:bg-gray-200 transition cursor-pointer 
-                   w-full sm:w-auto"
-      >
+        text-[#1F2540] rounded hover:bg-gray-200 transition cursor-pointer 
+        w-full sm:w-auto"
+        >
         ← Back to Products
       </button>
+        </div>
 
       {/* Main Grid */}
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10">
