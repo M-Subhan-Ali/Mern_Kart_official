@@ -11,7 +11,9 @@ const Create_Products = () => {
     category: "",
     stock: "",
   });
-  const [images, setImages] = useState([]); // store actual File objects
+
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,35 +21,36 @@ const Create_Products = () => {
   };
 
   const handleFileChange = (e) => {
-    setImages(Array.from(e.target.files)); // multiple file upload support
+    setImages(Array.from(e.target.files)); // store selected files
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      // 🧠 Prepare FormData for multipart/form-data
+      // Prepare FormData
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) =>
         data.append(key, value)
       );
 
-      images.forEach((file) => data.append("images", file)); // must match multer field name
+      images.forEach((file) => data.append("images", file)); // field name must match multer setup
 
+      // 🔗 Send POST request to backend
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/create-product`,
+        `${process.env.NEXT_PUBLIC_BASE_ROUTE}/product/create-product`,
         data,
         {
           headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
+          withCredentials: true, // include cookies/session if used
         }
       );
 
-      // Axios automatically parses JSON response, no need for res.json()
       alert("✅ Product created successfully!");
-      console.log(res.data);
+      console.log("Response:", res.data);
 
-      // Reset
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -57,8 +60,14 @@ const Create_Products = () => {
       });
       setImages([]);
     } catch (err) {
-      console.error(err);
-      alert("❌ Something went wrong");
+      console.error("❌ Error creating product:", err);
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Something went wrong!";
+      alert(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,7 +90,7 @@ const Create_Products = () => {
               value={formData.title}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
             />
           </div>
 
@@ -96,7 +105,7 @@ const Create_Products = () => {
               onChange={handleChange}
               rows="4"
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
             />
           </div>
 
@@ -111,7 +120,7 @@ const Create_Products = () => {
               value={formData.price}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
             />
           </div>
 
@@ -125,18 +134,19 @@ const Create_Products = () => {
               value={formData.category}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer"
             >
               <option value="">Select category</option>
+              <option value="men's clothing">men's clothing</option>
               <option value="electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
+              <option value="clothing">Clothing</option>
               <option value="Sports">Sports</option>
               <option value="groceries">Groceries</option>
               <option value="beauty">Beauty</option>
-              <option value="women's clothing">women's clothing</option>
-              <option value="jewelery">jewelery</option>
-              <option value="furniture">furniture</option>
-              <option value="fragrances">fragrances</option>
+              <option value="women's clothing">Women's Clothing</option>
+              <option value="jewelery">Jewelery</option>
+              <option value="furniture">Furniture</option>
+              <option value="fragrances">Fragrances</option>
               <option value="watch">Watches</option>
             </select>
           </div>
@@ -152,7 +162,7 @@ const Create_Products = () => {
               value={formData.stock}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:outline-none"
             />
           </div>
 
@@ -167,7 +177,7 @@ const Create_Products = () => {
               multiple
               accept="image/*"
               onChange={handleFileChange}
-              className="mt-1 block w-full text-gray-900"
+              className="mt-1 block w-50 text-gray-900 border border-gray-300 p-2 rounded-md cursor-pointer"
             />
           </div>
 
@@ -188,9 +198,12 @@ const Create_Products = () => {
           {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-md transition"
+            disabled={loading}
+            className={`w-full ${
+              loading ? "bg-gray-400" : "bg-teal-600 hover:bg-teal-700"
+            } text-white font-medium py-2 px-4 rounded-md transition`}
           >
-            Create Product
+            {loading ? "Uploading..." : "Create Product"}
           </button>
         </form>
       </div>
