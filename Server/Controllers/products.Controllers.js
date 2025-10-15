@@ -10,6 +10,44 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
+export const getSellerProducts = async (req, res) => {
+  try {
+    console.log("🔥 req.user =>", req.user);
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: req.user not found.",
+      });
+    }
+
+    const seller_ID = req.user.userID;
+    const products = await Product.find({ seller: seller_ID }).sort({
+      createdAt: -1,
+    });
+
+    if (!products || products.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No products found for this seller.",
+        products: [],
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Seller products retrieved successfully.",
+      products,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching seller products:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const fetch_ProductBy_ID = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(

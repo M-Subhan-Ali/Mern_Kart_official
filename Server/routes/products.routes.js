@@ -4,16 +4,24 @@ import {
   DeleteProduct,
   fetch_ProductBy_ID,
   getAllProducts,
+  getSellerProducts,
   Update_product,
 } from "../Controllers/products.Controllers.js";
 import { privateRoute } from "../middlewares/authmiddleware.js";
 import { requireRole } from "../middlewares/rolemiddleware.js";
 import { upload } from "../middlewares/upload.js";
+
 const router = Router();
 
-router.get("/", getAllProducts); //public routes bro
+// ✅ Static and specific routes first
+router.get("/", getAllProducts);
 
-router.get("/:id", fetch_ProductBy_ID);
+router.get(
+  "/getsellerproducts",
+  privateRoute,
+  requireRole("seller"),
+  getSellerProducts
+);
 
 router.post(
   "/create-product",
@@ -31,5 +39,8 @@ router.post(
 );
 
 router.post("/delete/:id", privateRoute, requireRole("seller"), DeleteProduct);
+
+// ✅ Dynamic route LAST
+router.get("/:id", fetch_ProductBy_ID);
 
 export { router as ProductRoute };

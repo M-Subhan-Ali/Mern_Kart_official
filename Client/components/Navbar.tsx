@@ -17,9 +17,12 @@ const Navbar: React.FC = () => {
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const dispatch = useAppDispatch();
-  const { user, role, isAuthenticated, loading: userLoading } = useAppSelector(
-    (state) => state.user
-  );
+  const {
+    user,
+    role,
+    isAuthenticated,
+    loading: userLoading,
+  } = useAppSelector((state) => state.user);
   const { cart } = useAppSelector((state) => state.cart);
 
   //  Fetch user info from Redux
@@ -29,7 +32,7 @@ const Navbar: React.FC = () => {
 
   //  Fetch cart when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && role === "buyer") {
       dispatch(fetchCart());
     }
   }, [isAuthenticated, dispatch]);
@@ -124,17 +127,19 @@ const Navbar: React.FC = () => {
                 </button>
 
                 {/* 🛒 Cart with count */}
-               {role !== "seller" && <button
-                  onClick={handleCart}
-                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
-                >
-                  🛒 Cart
-                  {cart?.items && cart.items.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cart.items.length}
-                    </span>
-                  )}
-                </button>}
+                {role !== "seller" && (
+                  <button
+                    onClick={handleCart}
+                    className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
+                  >
+                    🛒 Cart
+                    {cart?.items && cart.items.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {cart.items.length}
+                      </span>
+                    )}
+                  </button>
+                )}
 
                 <button
                   onClick={handleLogout}
@@ -146,17 +151,19 @@ const Navbar: React.FC = () => {
             ) : (
               <>
                 {/* 🛒 Cart without login */}
-               {role !== "seller" && <button
-                  onClick={handleCart}
-                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
-                >
-                  🛒 Cart
-                  {cart?.items && cart.items.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cart.items.length}
-                    </span>
-                  )}
-                </button>}
+                {role !== "seller" && (
+                  <button
+                    onClick={handleCart}
+                    className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-300 text-sm sm:text-base"
+                  >
+                    🛒 Cart
+                    {cart?.items && cart.items.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {cart.items.length}
+                      </span>
+                    )}
+                  </button>
+                )}
 
                 <button
                   onClick={handleLogin}
@@ -203,17 +210,19 @@ const Navbar: React.FC = () => {
                 <p className="font-bold text-white">
                   Hi {user?.name || "User"}
                 </p>
-               {role !== "seller" && <button
-                  onClick={handleCart}
-                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
-                >
-                  🛒 Cart
-                  {cart?.items && cart.items.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cart.items.length}
-                    </span>
-                  )}
-                </button>}
+                {role !== "seller" && (
+                  <button
+                    onClick={handleCart}
+                    className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+                  >
+                    🛒 Cart
+                    {cart?.items && cart.items.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {cart.items.length}
+                      </span>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 bg-white text-black hover:bg-amber-200 rounded-lg transition"
@@ -223,17 +232,19 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <>
-               {role !== "seller" && <button
-                  onClick={handleCart}
-                  className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
-                >
-                  🛒 Cart
-                  {cart?.items && cart.items.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cart.items.length}
-                    </span>
-                  )}
-                </button>}
+                {role !== "seller" && (
+                  <button
+                    onClick={handleCart}
+                    className="relative px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+                  >
+                    🛒 Cart
+                    {cart?.items && cart.items.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {cart.items.length}
+                      </span>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={handleLogin}
                   className="px-4 py-2 bg-white text-black hover:bg-amber-200 rounded-lg transition"
