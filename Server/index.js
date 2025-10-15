@@ -1,13 +1,17 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import connectDB from "./ConfigDatabase/mongoDb.js";
-import { configDotenv } from "dotenv";
+// import { configDotenv } from "dotenv";
 import { AuthRouter } from "./routes/auth.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { UserRouter } from "./routes/user.routes.js";
 import { ProductRoute } from "./routes/products.routes.js";
 import { CartRoute } from "./routes/cart.routes.js";
-configDotenv();
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
