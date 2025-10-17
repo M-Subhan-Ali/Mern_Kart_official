@@ -2,12 +2,14 @@
 
 import ParticlesBackground from "@/components/ParticleBackground";
 import { addToCart, fetchCart } from "@/redux/features/cartSlice";
+import { deleteProduct, fetchAllProducts, fetchSellerProducts } from "@/redux/features/productSlice";
 import { fetchUserInfo } from "@/redux/features/userSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useTheme } from "@/theme/ThemeProvider";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -15,52 +17,31 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Products = () => {
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const { products, sellerProducts, loading } = useAppSelector((state) => state.product)
   const { role, user } = useAppSelector((state) => state.user);
   const { cart } = useAppSelector((state) => state.cart);
+  const productList = role == "seller" ? sellerProducts : products;
+
+
   const dispatch = useAppDispatch();
   const theme = useTheme();
+  const route = useRouter()
+
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   // 🧠 Fetch products based on role
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoadingProducts(true);
+    dispatch(fetchUserInfo()); // always load user first
 
-        let endpoint = `${process.env.NEXT_PUBLIC_BASE_ROUTE}/product`;
-
-        if (role === "seller") {
-          endpoint = `${process.env.NEXT_PUBLIC_BASE_ROUTE}/product/getsellerproducts`;
-        }
-
-        const res = await axios.get(endpoint, { withCredentials: true });
-        const data = res.data;
-
-        const items = Array.isArray(data)
-          ? data
-          : data.products || data.data || [];
-
-        setProducts(items);
-      } catch (error: any) {
-        console.error("❌ Failed to fetch products:", error.message);
-        toast.error("Error fetching products. Please try again later.", {
-          position: "bottom-center",
-        });
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    if (role) {
-      fetchProducts();
+    if (role === "seller") {
+      dispatch(fetchSellerProducts());
+    } else {
+      dispatch(fetchAllProducts());
     }
-  }, [role]);
+  }, [dispatch, role]);
 
-  // 🔐 Fetch user role
-  useEffect(() => {
-    dispatch(fetchUserInfo());
-  }, [dispatch]);
 
   // 🛒 Add to cart logic
   const handleAddToCart = async (productId: string) => {
@@ -90,30 +71,37 @@ const Products = () => {
   };
 
   // 🛍️ Buy, Edit, Delete handlers
-  const handleBuyNow = () =>
+  const handleBuyNow = () => {
     toast.info("Redirecting to checkout...", { position: "bottom-center" });
-
-  const handleEdit = () =>
+  }
+  const handleEdit = async (productId: string) => {
     toast.info("Redirecting to edit page...", { position: "bottom-center" });
+    route.push(`/Products/${productId}`)
+  }
 
-  const handleDelete = async (productId: string) => {
+  const confirmDelete = (productId: string) => {
+    setSelectedProductId(productId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedProductId) return;
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_BASE_ROUTE}/product/${productId}`,
-        { withCredentials: true }
-      );
+      dispatch(deleteProduct(selectedProductId))
       toast.success("🗑️ Product deleted successfully!", {
         position: "bottom-center",
       });
-      setProducts((prev) => prev.filter((p: any) => p._id !== productId));
     } catch {
       toast.error("Failed to delete product.", { position: "bottom-center" });
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedProductId(null);
     }
   };
 
   // 🧩 UI
   return (
-    <div className="pt-[100px] w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32 bg-[linear-gradient(to_left,#241919ff_40%,#241919ff_60%)]">
+    <div className="pt-[100px] w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32 bg-[linear-gradient(to_left,#241919ff_40%,#241919ff_60%)] pb-12">
       <ParticlesBackground />
 
       {/* Header */}
@@ -128,7 +116,7 @@ const Products = () => {
 
       {/* Product grid */}
       <div className="relative z-10 grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {loadingProducts ? (
+        {loading ? (
           Array(8)
             .fill(0)
             .map((_, index) => (
@@ -145,14 +133,14 @@ const Products = () => {
                 </div>
               </div>
             ))
-        ) : products.length === 0 ? (
+        ) : productList.length === 0 ? (
           <div className="col-span-full text-center text-gray-400 text-lg italic">
             {role === "seller"
               ? "You haven’t added any products yet."
               : "No products available."}
           </div>
         ) : (
-          products.map((product: any) => (
+          productList.map((product: any) => (
             <div
               key={product._id}
               className="bg-black border border-gray-800 rounded-xl shadow-md hover:shadow-lg transition overflow-hidden"
@@ -170,7 +158,7 @@ const Products = () => {
               </Link>
 
               {/* Details */}
-              <div className="p-4 flex flex-col gap-2">
+              <div className="p-4 flex flex-col gap-2 h-1/2 justify-around">
                 <h2 className="text-base sm:text-lg font-semibold text-white truncate">
                   {product.title}
                 </h2>
@@ -184,7 +172,7 @@ const Products = () => {
                   ${product.price.toFixed(2)}
                 </p>
                 <p className="text-xs sm:text-sm font-bold text-gray-400">
-                  Seller: {product.seller?.name || "Unknown"}
+                  Seller: {product.seller?.name || user?.name}
                 </p>
 
                 {/* Role actions */}
@@ -214,7 +202,7 @@ const Products = () => {
                       ✏️ Edit Product
                     </button>
                     <button
-                      onClick={() => handleDelete(product._id)}
+                      onClick={() => confirmDelete(product._id)}
                       className="flex-1 px-4 py-2 bg-red-900 hover:bg-red-700 text-xs text-white rounded-lg transition duration-300"
                     >
                       🗑️ Delete
@@ -234,6 +222,37 @@ const Products = () => {
           ))
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && role === "seller" && (
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999]"
+        >
+          <div className="bg-gray-900/90 text-white rounded-2xl p-6 w-80 shadow-2xl border border-gray-700">
+            <h2 className="text-lg font-semibold mb-3 text-center">
+              Confirm Deletion
+            </h2>
+            <p className="text-sm text-gray-300 mb-5 text-center leading-relaxed">
+              Are you sure you want to delete this product? <br />
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition duration-200"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

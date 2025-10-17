@@ -5,32 +5,35 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ParticlesBackground from "@/components/ParticleBackground";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import Link from "next/link";
+import { fetchProductById, resetSingleProduct } from "@/redux/features/productSlice";
 
 const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
   const params = useParams();
   const router = useRouter();
-  const { role } = useAppSelector((state) => state.user)
+  const { role } = useAppSelector((state) => state.user);
+  const {singleProduct} = useAppSelector((state)=>state.product)
+
+  const dispatch = useAppDispatch();
+
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_ROUTE}/product/${params?.id}`
-        );
-        setProduct(res.data);
-        setSelectedImage(res.data?.images[0]);
-      } catch (err) {
-        console.error("Error fetching product:", err);
-      }
-    };
+    if(!params?.id) return;
 
-    fetchProduct();
-  }, [params]);
+        dispatch(resetSingleProduct())
+        dispatch(fetchProductById(params.id))
+  
+      }, [dispatch,params?.id]);
 
-  if (!product) return <div className="p-6">Loading...</div>;
+  useEffect(()=>{
+    if(singleProduct?.images?.length>0){
+    setSelectedImage(singleProduct.images[0]);
+  }
+},[singleProduct])
+
+  if (!singleProduct || Object.keys(singleProduct).length==0) return <div className="p-6">Loading...</div>;
 
 
   return (
@@ -68,7 +71,7 @@ const ProductDetail = () => {
 
           {/* Thumbnails */}
           <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
-            {product.images.map((img, index) => (
+            {singleProduct.images.map((img, index) => (
               <div
                 key={index}
                 className={`relative w-16 h-16 sm:w-20 sm:h-20 border-2 rounded-md cursor-pointer transition 
@@ -89,14 +92,14 @@ const ProductDetail = () => {
         {/* Right: Product Details */}
         <div className="flex flex-col gap-4 bg-white px-4 sm:px-6 md:px-8 py-6 border rounded-md">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#1F2540]">
-            {product.title}
+            {singleProduct.title}
           </h1>
-          <p className="text-base sm:text-lg text-gray-600">{product.description}</p>
+          <p className="text-base sm:text-lg text-gray-600">{singleProduct.description}</p>
           <p className="text-xl sm:text-2xl text-[#378C92] font-semibold">
-           Price :  ${product.price.toFixed(2)}
+           Price :  ${singleProduct.price.toFixed(2)}
           </p>
-          <p className="text-md text-white bg-black w-25 border rounded-md text-center">Stock: {product.stock}</p>
-          <p className="text-sm text-gray-500">Seller: {product.seller?.name}</p>
+          <p className="text-md text-white bg-black w-25 border rounded-md text-center">Stock: {singleProduct.stock}</p>
+          <p className="text-sm text-gray-500">Seller: {singleProduct.seller?.name}</p>
 
           {role === "buyer" && <div className="grid">
             <button
