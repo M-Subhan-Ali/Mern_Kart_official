@@ -77,8 +77,24 @@ export const userCheckLogin = createAsyncThunk("user/verify",async (_,{rejectWit
  }
 })
 
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export interface UserState {
+  user: User | null;
+  role: string | null;
+  login: boolean;
+  loading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+}
+
 // === Initial State ===
-const initialState = {
+const initialState : UserState = {
   user: null,
   role: null,
   login:false,
