@@ -3,7 +3,9 @@ import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 
 export const getAllProducts = async (req, res) => {
   try {
-    const product = await Product.find().populate("seller", "name email");
+    const product = await Product.find().populate("seller", "name email").sort({
+      createdAt:-1
+    });
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ error: `internal server error ${error}` });
@@ -121,13 +123,48 @@ export const Update_product = async (req, res) => {
         .json({ error: "not authorized to update the product!" });
     }
 
-    const update = req.body;
+    const {
+      title,
+      description,
+      price,
+      category,
+      stock,
+      existingImagesToKeep, 
+    } = req.body;
+    
+    product.title = title || product.title;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.category = category || product.category;
+    product.stock = stock || product.stock;
 
-    Object.assign(product, update);
+
+    let finalImages = [];
+
+    try {
+      const keptImages = existingImagesToKeep ? JSON.parse(existingImagesToKeep) : [];
+      finalImages = [...keptImages];
+      
+    } catch (e) {
+      console.error("Error parsing existingImagesToKeep:", e);
+    }
+
+
+    if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+            const image = await uploadToCloudinary(file.buffer, "products");
+            finalImages.push(image);
+        }
+    }
+    
+    product.images = finalImages;
 
     await product.save();
 
-    res.status(201).json({ message: "Product updated!", product });
+    res.status(200).json({ 
+        message: "Product updated successfully", 
+        product: product.toObject() 
+    });
   } catch (error) {
     res.status(500).json({ error: `internal server error ${error}` });
   }

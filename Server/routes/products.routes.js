@@ -35,6 +35,7 @@ router.post(
   "/update-product/:id",
   privateRoute,
   requireRole("seller"),
+  upload.array("images",5),
   Update_product
 );
 
