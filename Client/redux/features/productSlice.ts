@@ -70,6 +70,7 @@ export const updateProduct = createAsyncThunk(
     try {
       const res = await axios.post(`${BASE_URL}/product/update-product/${id}`, data, {
         withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return res.data.product;
     } catch (error: any) {

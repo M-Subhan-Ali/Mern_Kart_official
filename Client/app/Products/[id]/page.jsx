@@ -7,34 +7,59 @@ import { useParams, useRouter } from "next/navigation";
 import ParticlesBackground from "@/components/ParticleBackground";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import Link from "next/link";
-import { fetchProductById, resetSingleProduct } from "@/redux/features/productSlice";
+import {
+  deleteProduct,
+  fetchProductById,
+  resetSingleProduct,
+} from "@/redux/features/productSlice";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ProductDetail = () => {
-  const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const params = useParams();
   const router = useRouter();
   const { role } = useAppSelector((state) => state.user);
-  const {singleProduct} = useAppSelector((state)=>state.product)
+  const { singleProduct } = useAppSelector((state) => state.product);
 
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if(!params?.id) return;
+    if (!params?.id) return;
 
-        dispatch(resetSingleProduct())
-        dispatch(fetchProductById(params.id))
-  
-      }, [dispatch,params?.id]);
+    dispatch(resetSingleProduct());
+    dispatch(fetchProductById(params.id));
+  }, [dispatch, params?.id]);
 
-  useEffect(()=>{
-    if(singleProduct?.images?.length>0){
-    setSelectedImage(singleProduct.images[0]);
-  }
-},[singleProduct])
+  useEffect(() => {
+    if (singleProduct?.images?.length > 0) {
+      setSelectedImage(singleProduct.images[0]);
+    }
+  }, [singleProduct]);
 
-  if (!singleProduct || Object.keys(singleProduct).length==0) return <div className="p-6">Loading...</div>;
+  // ✅ Delete Confirmation Flow
+  const confirmDelete = () => {
+    setShowDeleteModal(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    try {
+      await dispatch(deleteProduct(params.id)).unwrap();
+      toast.success("🗑️ Product deleted successfully!", {
+        position: "bottom-center",
+      });
+      router.push("/Products");
+    } catch {
+      toast.error("Failed to delete product.", { position: "bottom-center" });
+    } finally {
+      setShowDeleteModal(false);
+    }
+  };
+
+  if (!singleProduct || Object.keys(singleProduct).length == 0)
+    return <div className="p-6">Loading...</div>;
 
   return (
     <div className="pt-[70px] px-4 sm:px-6 md:px-10 lg:px-32 w-full mx-auto ">
@@ -42,23 +67,25 @@ const ProductDetail = () => {
 
       {/* Back Button */}
       <div className="pt-10">
-      <button
-        onClick={() => router.back()}
-        className="relative z-10 mb-5 mt-2 px-4 py-2 bg-gray-100 border border-gray-300 
-        text-[#1F2540] rounded hover:bg-gray-200 transition cursor-pointer 
-        w-full sm:w-auto"
+        <button
+          onClick={() => router.back()}
+          className="relative z-10 mb-5 mt-2 px-4 py-2 bg-gray-100 border border-gray-300 
+          text-[#1F2540] rounded hover:bg-gray-200 transition cursor-pointer 
+          w-full sm:w-auto"
         >
-        ← Back to Products
-      </button>
-        </div>
+          ← Back to Products
+        </button>
+      </div>
 
       {/* Main Grid */}
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* Left: Images */}
         <div>
-          <div className="w-full h-[250px] sm:h-[300px] md:h-[400px] 
+          <div
+            className="w-full h-[250px] sm:h-[300px] md:h-[400px] 
                           bg-[linear-gradient(to_left,#241919ff_0%,#ffffff_10%,#ffffff_90%,#241919ff_100%)] 
-                          relative border rounded-md overflow-hidden cursor-pointer">
+                          relative border rounded-md overflow-hidden cursor-pointer"
+          >
             {selectedImage && (
               <Image
                 src={selectedImage}
@@ -75,7 +102,11 @@ const ProductDetail = () => {
               <div
                 key={index}
                 className={`relative w-16 h-16 sm:w-20 sm:h-20 border-2 rounded-md cursor-pointer transition 
-                  ${img === selectedImage ? "border-[#7a86a4ff]" : "border-gray-300"}`}
+                  ${
+                    img === selectedImage
+                      ? "border-[#7a86a4ff]"
+                      : "border-gray-300"
+                  }`}
                 onClick={() => setSelectedImage(img)}
               >
                 <Image
@@ -94,66 +125,114 @@ const ProductDetail = () => {
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#1F2540]">
             {singleProduct.title}
           </h1>
-          <p className="text-base sm:text-lg text-gray-600">{singleProduct.description}</p>
-          <p className="text-xl sm:text-2xl text-[#378C92] font-semibold">
-           Price :  ${singleProduct.price.toFixed(2)}
+          <p className="text-base sm:text-lg text-gray-600">
+            {singleProduct.description}
           </p>
-          <p className="text-md text-white bg-black w-25 border rounded-md text-center">Stock: {singleProduct.stock}</p>
-          <p className="text-sm text-gray-500">Seller: {singleProduct.seller?.name}</p>
+          <p className="text-xl sm:text-2xl text-[#378C92] font-semibold">
+            Price : ${singleProduct.price.toFixed(2)}
+          </p>
+          <p className="text-md text-white bg-black w-25 border rounded-md text-center">
+            Stock: {singleProduct.stock}
+          </p>
+          <p className="text-sm text-gray-500">
+            Seller: {singleProduct.seller?.name}
+          </p>
 
-          {role === "buyer" && <div className="grid">
-            <button
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+          {/* Buyer Buttons */}
+          {role === "buyer" && (
+            <div className="grid">
+              <button
+                className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
             text-white font-semibold rounded-lg shadow-md 
             hover:from-[#41cd2bff] hover:to-[#414449ff] 
             focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
             transition duration-300 ease-in-out 
             w-full sm:w-auto"
-            >
-              Buy Now
-            </button>
-            <button
-              className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
+              >
+                Buy Now
+              </button>
+              <button
+                className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
             hover:bg-orange-500 transition cursor-pointer 
             w-full sm:w-auto"
-            >
-              Add to Cart
-            </button>
-          </div>}
+              >
+                Add to Cart
+              </button>
+            </div>
+          )}
 
-          {role === "seller" && <div className="grid">
-            <button
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+          {/* Seller Buttons */}
+          {role === "seller" && (
+            <div className="grid">
+              <Link
+                href={`/Products/edit/${params.id}`}
+                className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
             text-white font-semibold rounded-lg shadow-md 
             hover:from-[#41cd2bff] hover:to-[#414449ff] 
             focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
             transition duration-300 ease-in-out 
-            w-full sm:w-auto"
-            >
-              Edit
-            </button>
-            <button
-              className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
+            w-full sm:w-auto text-center"
+              >
+                Edit
+              </Link>
+              <button
+                onClick={confirmDelete}
+                className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
             hover:bg-orange-500 transition cursor-pointer 
             w-full sm:w-auto"
-            >
-              Delete
-            </button>
-          </div>}
+              >
+                Delete
+              </button>
+            </div>
+          )}
 
-          {role !== "seller" && role !== "buyer" && <div className="grid">
-            <Link href={"/Login"}  className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
+          {/* Not Logged In */}
+          {role !== "seller" && role !== "buyer" && (
+            <div className="grid">
+              <Link
+                href={"/Login"}
+                className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
               text-white font-semibold rounded-lg shadow-md 
               hover:from-[#41cd2bff] hover:to-[#414449ff] 
             focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
             transition duration-300 ease-in-out 
-            w-full sm:w-auto text-center">
-              Login for buying or manage products
-            </Link>
-            </div>}
-
+            w-full sm:w-auto text-center"
+              >
+                Login for buying or manage products
+              </Link>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* 🧩 Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-gray-900/90 text-white rounded-2xl p-6 w-80 shadow-2xl border border-gray-700">
+            <h2 className="text-lg font-semibold mb-3 text-center">
+              Confirm Deletion
+            </h2>
+            <p className="text-sm text-gray-300 mb-5 text-center leading-relaxed">
+              Are you sure you want to delete this product? <br />
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition duration-200"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
