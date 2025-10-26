@@ -10,10 +10,13 @@ import cookieParser from "cookie-parser";
 import { UserRouter } from "./routes/user.routes.js";
 import { ProductRoute } from "./routes/products.routes.js";
 import { CartRoute } from "./routes/cart.routes.js";
+import { paymentRouter } from "./routes/paymentRoutes.js";
+import { webhookRouter } from "./routes/paymentWebhookRoute.js";
 
 
 
 const app = express();
+app.use("/api/payment", webhookRouter);
 const PORT = process.env.PORT || 5000;
 app.use(cookieParser());
 app.use(
@@ -34,6 +37,7 @@ app.use("/authentication", AuthRouter);
 app.use("/user", UserRouter);
 app.use("/product", ProductRoute);
 app.use("/cart", CartRoute);
+app.use("/api/payment", paymentRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
