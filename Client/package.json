@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
+    "@stripe/stripe-js": "^8.1.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
@@ -23,6 +24,7 @@
     "react-loading-skeleton": "^3.5.0",
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.5",
+    "stripe": "^19.1.0",
     "tailwindcss": "^4.1.11",
     "tsparticles": "^3.9.1"
   },

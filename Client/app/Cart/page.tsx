@@ -11,6 +11,10 @@ import {
 } from "@/redux/features/cartSlice";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { loadStripe } from "@stripe/stripe-js";
+import axios from "axios";
+
+
 
 const CartPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -58,6 +62,35 @@ const CartPage: React.FC = () => {
       toast.error("Failed to update quantity");
     }
   };
+
+const handleCheckout = async () => {
+  try {
+    // Load Stripe (optional if you want client-side redirect)
+    const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+    // Create session
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BASE_ROUTE}/api/payment/create-checkout-session`,
+      {}, // ✅ no need to send cart, backend uses user cart directly
+      { withCredentials: true }
+    );
+
+    const { url } = response.data;
+    if (!url) throw new Error("No checkout URL received from backend.");
+
+    // ✅ Redirect to Stripe Checkout
+    window.location.href = url;
+  } catch (error: any) {
+    console.error("Checkout error:", error);
+    toast.error(error.response?.data?.error || "Checkout failed, please try again.");
+  }
+};
+
+
+
+
+
+
 
   const total =
     cart?.items?.reduce((sum, i) => sum + i.product.price * i.quantity, 0) || 0;
@@ -264,7 +297,9 @@ const CartPage: React.FC = () => {
             <span>${(total * 1.05).toFixed(2)}</span>
           </div>
 
-          <button className="w-full mt-6 py-3 rounded-xl bg-gradient-to-r from-gray-500 to-gray-700 text-white font-medium hover:from-gray-600 hover:to-gray-800 transition-all duration-300 shadow-md">
+          <button
+           onClick={handleCheckout}
+          className="w-full mt-6 py-3 rounded-xl bg-gradient-to-r from-gray-500 to-gray-700 text-white font-medium hover:from-gray-600 hover:to-gray-800 transition-all duration-300 shadow-md">
             Proceed to Checkout
           </button>
 
