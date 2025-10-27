@@ -1,21 +1,19 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import { Cart } from "../model/Cart.js";
+import { User } from "../model/user.js";
 
 dotenv.config();
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ Stripe Webhook Controller
 export const handleStripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
-
   let event;
 
   try {
-    // ✅ Verify Stripe signature using your webhook secret
+    // ✅ Verify Stripe signature (to ensure event really came from Stripe)
     event = stripe.webhooks.constructEvent(
-      req.body, // must be raw body
+      req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -24,33 +22,37 @@ export const handleStripeWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // ✅ Handle different event types
   try {
     switch (event.type) {
-      case "checkout.session.completed":
+      case "checkout.session.completed": {
         const session = event.data.object;
-        console.log("✅ Payment successful for:", session.customer_email);
+        const userId = session.client_reference_id; // ✅ You added this when creating the session
 
-        // Optionally clear the user's cart after successful payment
-        if (session.customer_email) {
+        console.log("✅ Payment completed for user ID:", userId);
+
+        if (userId) {
+          // Clear the user's cart
           await Cart.findOneAndUpdate(
-            { userEmail: session.customer_email },
+            { user: userId },
             { $set: { items: [] } }
           );
-          console.log("🧹 Cart cleared for user:", session.customer_email);
-        }
 
+          console.log("🧹 Cart cleared for user:", userId);
+        } else {
+          console.log("⚠️ No user ID found in session");
+        }
         break;
+      }
 
       case "payment_intent.payment_failed":
         console.log("❌ Payment failed:", event.data.object);
         break;
 
       default:
-        console.log(`Unhandled event type ${event.type}`);
+        console.log(`⚠️ Unhandled event type ${event.type}`);
     }
 
-    // Respond to Stripe to confirm receipt
+    // Always respond with 200 so Stripe knows you received the event
     res.status(200).json({ received: true });
   } catch (error) {
     console.error("⚠️ Webhook processing error:", error);

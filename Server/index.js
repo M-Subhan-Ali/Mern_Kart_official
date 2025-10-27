@@ -16,8 +16,13 @@ import { webhookRouter } from "./routes/paymentWebhookRoute.js";
 
 
 const app = express();
-app.use("/api/payment", webhookRouter);
 const PORT = process.env.PORT || 5000;
+
+connectDB();
+
+app.use("/api/payment", webhookRouter);
+
+
 app.use(cookieParser());
 app.use(
   cors({
@@ -27,7 +32,6 @@ app.use(
 );
 app.use(express.json());
 
-connectDB();
 app.get("/", (req, res) => {
   console.log("Server is running");
   res.send("Hello from the server!");

@@ -51,6 +51,7 @@ export const createCheckoutSession = async (req, res) => {
       success_url: "http://localhost:3000/Success",
       cancel_url: "http://localhost:3000/Cancel",
       customer_email: req.user.email, 
+      client_reference_id:userId
     });
 
     res.status(200).json({ url: session.url });
