@@ -30,17 +30,34 @@ export const handleStripeWebhook = async (req, res) => {
 
         console.log("✅ Payment completed for user ID:", userId);
 
-        if (userId) {
-          // Clear the user's cart
-          await Cart.findOneAndUpdate(
-            { user: userId },
-            { $set: { items: [] } }
-          );
-
-          console.log("🧹 Cart cleared for user:", userId);
-        } else {
+        if(!userId){
           console.log("⚠️ No user ID found in session");
+          break;
         }
+
+
+        const cart = await Cart.findOne({user:userId}).populate("items.product")
+
+        if(!cart){
+           console.log("⚠️ Cart not found for user:", userId);
+          break;
+        }
+
+        for(const item of cart.items ){
+          const product = item.product;
+          if(product && product.stock >= item.quantity){
+            product.stock -= item.quantity;
+            await product.save()
+          } else {
+            console.log(`⚠️ Not enough stock for ${product?.title}`);
+          }
+        }
+
+
+        await Cart.findOneAndUpdate({user:userId},{$set:{items:[]}})
+
+        console.log("🧹 Cart cleared & stock updated for user:", userId);
+
         break;
       }
 
