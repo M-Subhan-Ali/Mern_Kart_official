@@ -14,15 +14,19 @@ import {
 } from "@/redux/features/productSlice";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { addToCart } from "@/redux/features/cartSlice";
 
 const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
 
   const params = useParams();
   const router = useRouter();
   const { role } = useAppSelector((state) => state.user);
   const { singleProduct } = useAppSelector((state) => state.product);
+  const { cart } = useAppSelector((state) => state.cart)
 
   const dispatch = useAppDispatch();
 
@@ -57,6 +61,41 @@ const ProductDetail = () => {
       setShowDeleteModal(false);
     }
   };
+
+  const handleAddToCart = async (productId, quantity) => {
+    const alreadyInCart = cart?.items?.some((item) => item.product._id === productId);
+
+    if (alreadyInCart) {
+      toast.info("🛒 This item is already in your cart!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+      return;
+    }
+
+    if (quantity > singleProduct.stock) {
+      toast.warning("🚫 Not enough stock!", { position: "bottom-center" });
+      return;
+    }
+
+    try {
+      await dispatch(addToCart({ productId, quantity })).unwrap();
+      toast.success("✅ Added to cart!", {
+        position: "bottom-center",
+        autoClose: 2000,
+      });
+    } catch {
+      toast.error("Failed to add to cart!", {
+        position: "bottom-center",
+      });
+    }
+  };
+
+
+
+  const See_Cart = () => {
+    router.push("/Cart")
+  }
 
   if (!singleProduct || Object.keys(singleProduct).length == 0)
     return <div className="p-6">Loading...</div>;
@@ -102,10 +141,9 @@ const ProductDetail = () => {
               <div
                 key={index}
                 className={`relative w-16 h-16 sm:w-20 sm:h-20 border-2 rounded-md cursor-pointer transition 
-                  ${
-                    img === selectedImage
-                      ? "border-[#7a86a4ff]"
-                      : "border-gray-300"
+                  ${img === selectedImage
+                    ? "border-[#7a86a4ff]"
+                    : "border-gray-300"
                   }`}
                 onClick={() => setSelectedImage(img)}
               >
@@ -128,12 +166,39 @@ const ProductDetail = () => {
           <p className="text-base sm:text-lg text-gray-600">
             {singleProduct.description}
           </p>
-          <p className="text-xl sm:text-2xl text-[#378C92] font-semibold">
+          <p className="text-xl sm:text-2xl text-green-700 font-semibold">
             Price : ${singleProduct.price.toFixed(2)}
           </p>
-          <p className="text-md text-white bg-black w-25 border rounded-md text-center">
+          <p className="text-xl text-black w-25  rounded-md font-bold">
             Stock: {singleProduct.stock}
           </p>
+            {/* 🔹 Quantity Controls */}
+              <div className="flex items-center gap-4 mt-4">
+                <button
+                  onClick={() => setQuantity((prev) => (prev > 1 ? prev - 1 : 1))}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-bold text-lg hover:bg-gray-300 transition"
+                >
+                  -
+                </button>
+
+                <span className="text-lg font-semibold">{quantity}</span>
+
+                <button
+                  onClick={() => {
+                    if (quantity < singleProduct.stock) {
+                      setQuantity((prev) => prev + 1);
+                    } else {
+                      toast.warning("🚫 Cannot exceed stock limit!", {
+                        position: "bottom-center",
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-bold text-lg hover:bg-gray-300 transition"
+                >
+                  +
+                </button>
+              </div>
+
           <p className="text-sm text-gray-500">
             Seller: {singleProduct.seller?.name}
           </p>
@@ -142,19 +207,24 @@ const ProductDetail = () => {
           {role === "buyer" && (
             <div className="grid">
               <button
+                onClick={() => See_Cart()}
                 className="mt-4 px-6 py-3 bg-gradient-to-r from-[#7a86a4ff] to-[#414449ff]
-            text-white font-semibold rounded-lg shadow-md 
-            hover:from-[#41cd2bff] hover:to-[#414449ff] 
-            focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
-            transition duration-300 ease-in-out 
-            w-full sm:w-auto"
+      text-white font-semibold rounded-lg shadow-md 
+      hover:from-[#41cd2bff] hover:to-[#414449ff] 
+      focus:outline-none focus:ring-2 focus:ring-[#41cd2bff] focus:ring-offset-2 
+      transition duration-300 ease-in-out 
+      w-full sm:w-auto"
               >
-                Buy Now
+                All products in cart
               </button>
+
+            
+              {/* 🔹 Add to Cart Button */}
               <button
-                className="mt-2 px-6 py-3 bg-gray-500 text-white rounded-lg 
-            hover:bg-orange-500 transition cursor-pointer 
-            w-full sm:w-auto"
+                onClick={() => handleAddToCart(singleProduct._id, quantity)}
+                className="mt-3 px-6 py-3 bg-gray-500 text-white rounded-lg 
+      hover:bg-orange-500 transition cursor-pointer 
+      w-full sm:w-auto"
               >
                 Add to Cart
               </button>

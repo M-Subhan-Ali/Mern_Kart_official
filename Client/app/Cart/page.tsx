@@ -65,13 +65,12 @@ const CartPage: React.FC = () => {
 
 const handleCheckout = async () => {
   try {
-    // Load Stripe (optional if you want client-side redirect)
     const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
     // Create session
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BASE_ROUTE}/api/payment/create-checkout-session`,
-      {}, // ✅ no need to send cart, backend uses user cart directly
+      {}, 
       { withCredentials: true }
     );
 

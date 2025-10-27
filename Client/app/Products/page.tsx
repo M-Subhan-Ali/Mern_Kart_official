@@ -71,9 +71,9 @@ const Products = () => {
   };
 
   // 🛍️ Buy, Edit, Delete handlers
-  const handleBuyNow = () => {
-    toast.info("Redirecting to checkout...", { position: "bottom-center" });
-  }
+  // const handleBuyNow = () => {
+  //   toast.info("Redirecting to checkout...", { position: "bottom-center" });
+  // }
   const handleEdit = async (productId: string) => {
     toast.info("Redirecting to edit page...", { position: "bottom-center" });
     route.push(`/Products/${productId}`)
@@ -184,12 +184,12 @@ const Products = () => {
                     >
                       🛒 Add to Cart
                     </button>
-                    <button
+                    {/* <button
                       onClick={() => handleBuyNow()}
                       className="flex-1 px-4 py-2 bg-[#378C92] hover:bg-[#2f6e72] text-white rounded-lg transition duration-300"
                     >
                       💳 Buy Now
-                    </button>
+                    </button> */}
                   </div>
                 )}
 
