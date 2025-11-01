@@ -1,6 +1,6 @@
 "use client";
 
-import ParticlesBackground from "@/components/ParticleBackground";
+// import ParticlesBackground from "@/components/ParticleBackground";
 import { addToCart, fetchCart } from "@/redux/features/cartSlice";
 import { deleteProduct, fetchAllProducts, fetchSellerProducts } from "@/redux/features/productSlice";
 import { fetchUserInfo } from "@/redux/features/userSlice";
@@ -102,7 +102,7 @@ const Products = () => {
   // 🧩 UI
   return (
     <div className="pt-[100px] w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32 bg-[linear-gradient(to_left,#241919ff_40%,#241919ff_60%)] pb-12">
-      <ParticlesBackground />
+      {/* <ParticlesBackground /> */}
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-center w-full pb-8">
