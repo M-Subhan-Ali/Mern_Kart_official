@@ -34,7 +34,7 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   console.log("Server is running");
-  res.send("Hello from the server!");
+  res.send("Hello from the Subhan server!");
 });
 
 app.use("/authentication", AuthRouter);
