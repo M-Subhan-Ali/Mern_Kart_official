@@ -12,8 +12,6 @@ export const verify_session = async ( req , res ) => {
    try {
      const session = await stripe.checkout.sessions.retrieve(req.params.session_id);
      const userId = req.user.userID;
-
-   
  
      if(session.payment_status === "paid"){
 

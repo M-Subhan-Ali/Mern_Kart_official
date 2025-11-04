@@ -23,13 +23,24 @@ connectDB();
 app.use("/api/payment", webhookRouter);
 
 
-app.use(cookieParser());
+const allowedOrigins = [
+  process.env.frontendURL,
+  "http://localhost:3000", 
+];
 app.use(
   cors({
-    origin: process.env.frontendURL,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(express.json());
 
 app.get("/", (req, res) => {

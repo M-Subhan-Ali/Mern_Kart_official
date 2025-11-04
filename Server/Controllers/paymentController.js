@@ -48,8 +48,8 @@ export const createCheckoutSession = async (req, res) => {
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
-      success_url: "http://localhost:3000/Success",
-      cancel_url: "http://localhost:3000/Cancel",
+      success_url: "https://mern-kart-mu.vercel.app/Success",
+      cancel_url: "https://mern-kart-mu.vercel.app/Cancel",
       customer_email: req.user.email, 
       client_reference_id:userId
     });
